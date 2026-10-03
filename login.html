@@ -78,7 +78,7 @@
           <div id="loginStatus" class="form-status" aria-live="polite"></div>
         </form>
 
-        <p class="auth-note">Need an account? <a href="register.html">Create one here</a></p>
+        <p class="auth-note">Need an account? <a href="register.html?next=checkout">Create one here</a></p>
       </section>
     </main>
 
@@ -116,7 +116,7 @@
 
           localStorage.setItem("craftkitUserEmail", data.user.email);
           loginStatus.textContent = "Login successful. Redirecting...";
-          window.location.href = nextStep === "checkout" ? "index.html#shop" : "dashboard.html";
+          window.location.href = nextStep === "checkout" ? "index.html" : "dashboard.html";
         } catch (error) {
           loginStatus.textContent = error.message;
           loginStatus.classList.add("error");

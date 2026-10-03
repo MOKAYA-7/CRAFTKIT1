@@ -67,8 +67,8 @@ function isUserLoggedIn() {
   return Boolean(localStorage.getItem("craftkitUserEmail"));
 }
 
-function redirectToAuth(productTitle) {
-  localStorage.setItem("craftkitPendingCheckout", productTitle || "");
+function redirectToAuth(productTitle, purchaseType = "product") {
+  localStorage.setItem("craftkitPendingCheckout", purchaseType === "cart" ? "__cart__" : productTitle || "");
   window.location.href = "register.html?next=checkout";
 }
 
@@ -79,8 +79,14 @@ async function loadCatalog() {
       fetch("/api/courses")
     ]);
 
-    if (productsRes.ok) products = await productsRes.json();
-    if (coursesRes.ok) courses = await coursesRes.json();
+    if (productsRes.ok) {
+      const catalogProducts = await productsRes.json();
+      if (Array.isArray(catalogProducts) && catalogProducts.length) products = catalogProducts;
+    }
+    if (coursesRes.ok) {
+      const catalogCourses = await coursesRes.json();
+      if (Array.isArray(catalogCourses) && catalogCourses.length) courses = catalogCourses;
+    }
   } catch (error) {
     console.warn("Using fallback catalog data.", error);
   }
@@ -89,6 +95,17 @@ async function loadCatalog() {
   renderCourses();
   attachHomeControls();
   renderCart();
+
+  const pendingCheckout = localStorage.getItem("craftkitPendingCheckout");
+  if (pendingCheckout) {
+    localStorage.removeItem("craftkitPendingCheckout");
+    if (pendingCheckout === "__cart__") {
+      const items = getCart();
+      if (items.length && isUserLoggedIn()) openCartCheckoutFromItems(items);
+    } else if (isUserLoggedIn() && products.some((item) => item.title === pendingCheckout)) {
+      openCheckout(pendingCheckout);
+    }
+  }
 }
 
 function getStoreState() {
@@ -159,7 +176,6 @@ function renderCart() {
     });
   });
 
-  if (cartPanel) cartPanel.setAttribute("aria-hidden", "false");
 }
 
 function addToCart(productTitle) {
@@ -252,6 +268,7 @@ function openCheckout(productTitle) {
   checkoutSuccess.classList.add("hidden");
   checkoutSuccess.innerHTML = "";
   checkoutForm.reset();
+  delete checkoutForm.dataset.cartItems;
   checkoutForm.classList.remove("hidden");
   checkoutModal.classList.remove("hidden");
   checkoutModal.setAttribute("aria-hidden", "false");
@@ -571,13 +588,18 @@ function attachHomeControls() {
 if (cartButton) {
   cartButton.addEventListener("click", () => {
     if (!cartPanel) return;
-    cartPanel.classList.toggle("hidden");
+    const isOpening = cartPanel.classList.contains("hidden");
+    cartPanel.classList.toggle("hidden", !isOpening);
+    cartPanel.setAttribute("aria-hidden", String(!isOpening));
   });
 }
 
 if (closeCartButton) {
   closeCartButton.addEventListener("click", () => {
-    if (cartPanel) cartPanel.classList.add("hidden");
+    if (cartPanel) {
+      cartPanel.classList.add("hidden");
+      cartPanel.setAttribute("aria-hidden", "true");
+    }
   });
 }
 
@@ -585,8 +607,15 @@ if (checkoutCartButton) {
   checkoutCartButton.addEventListener("click", () => {
     const items = getCart();
     if (!items.length) return;
+    if (!isUserLoggedIn()) {
+      redirectToAuth("cart", "cart");
+      return;
+    }
     openCartCheckoutFromItems(items);
-    if (cartPanel) cartPanel.classList.add("hidden");
+    if (cartPanel) {
+      cartPanel.classList.add("hidden");
+      cartPanel.setAttribute("aria-hidden", "true");
+    }
   });
 }
 
@@ -705,17 +734,54 @@ if (studentForm) {
 if (productGrid || courseGrid) {
   loadCatalog();
   injectAIAssistant();
-
-  const pendingProduct = localStorage.getItem("craftkitPendingCheckout");
-  if (pendingProduct) {
-    const match = products.find((item) => item.title === pendingProduct);
-    if (match) {
-      setTimeout(() => {
-        openCheckout(match.title);
-      }, 200);
-    }
-    localStorage.removeItem("craftkitPendingCheckout");
-  }
 } else {
   injectAIAssistant();
 }
+
+function initHeroSlider() {
+  const slider = document.querySelector("[data-hero-slider]");
+  if (!slider) return;
+
+  const slides = [...slider.querySelectorAll(".slide")];
+  const dots = [...slider.querySelectorAll("[data-slide-dot]")];
+  if (!slides.length) return;
+
+  let currentIndex = 0;
+
+  const showSlide = (index) => {
+    slides.forEach((slide, slideIndex) => slide.classList.toggle("active", slideIndex === index));
+    dots.forEach((dot, dotIndex) => dot.classList.toggle("active", dotIndex === index));
+  };
+
+  dots.forEach((dot) => {
+    dot.addEventListener("click", () => {
+      currentIndex = Number(dot.dataset.slideDot || 0);
+      showSlide(currentIndex);
+    });
+  });
+
+  setInterval(() => {
+    currentIndex = (currentIndex + 1) % slides.length;
+    showSlide(currentIndex);
+  }, 4200);
+}
+
+function initAnimatedWords() {
+  const wordGroup = document.querySelector("[data-word-group]");
+  if (!wordGroup) return;
+
+  const words = JSON.parse(wordGroup.dataset.words || "[]");
+  if (!words.length) return;
+
+  let wordIndex = 0;
+  const updateWord = () => {
+    wordGroup.textContent = words[wordIndex];
+    wordIndex = (wordIndex + 1) % words.length;
+  };
+
+  updateWord();
+  setInterval(updateWord, 1800);
+}
+
+initHeroSlider();
+initAnimatedWords();

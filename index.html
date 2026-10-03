@@ -3,40 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CRAFTKIT Studio | Digital Templates & Creative Courses</title>
+    <title>CRAFTKIT Studio | Luxury Creative Templates</title>
     <meta
       name="description"
-      content="Buy premium CV templates, portfolios, posters, cards, and creative design coding courses from CRAFTKIT Studio."
+      content="Premium digital templates, creative coaching, portfolio systems, and design courses for modern creators."
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="container nav-wrap">
-        <a class="brand" href="#top" aria-label="CRAFTKIT Studio home">
+        <a class="brand" href="index.html" aria-label="CRAFTKIT Studio home">
           <span class="brand-mark">C</span>
           <span>CRAFTKIT</span>
         </a>
 
         <nav class="main-nav" aria-label="Main navigation">
-          <a href="#shop">Shop</a>
-          <a href="#courses">Courses</a>
-          <a href="#portfolio">Portfolio</a>
-          <a href="#reviews">Reviews</a>
-          <a href="#contact">Contact</a>
+          <a href="index.html">Home</a>
+          <a href="shop.html">Shop</a>
+          <a href="courses.html">Courses</a>
+          <a href="about.html">About</a>
+          <a href="contact.html">Contact</a>
         </nav>
 
         <div class="nav-actions">
           <a class="btn btn-ghost" href="login.html">Login</a>
           <a class="btn btn-secondary" href="register.html">Register</a>
-          <a class="btn btn-secondary" href="admin.html">Admin</a>
-          <button id="cartButton" class="btn btn-primary" type="button">Cart <span id="cartCount">0</span></button>
+          <button id="cartButton" class="btn btn-primary cart-button" type="button" aria-label="Open shopping cart" title="Shopping cart">
+            <svg class="cart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            <span id="cartCount" class="cart-count" aria-live="polite">0</span>
+          </button>
         </div>
 
         <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
@@ -48,55 +51,75 @@
     </header>
 
     <main id="top">
-      <section class="hero">
-        <div class="container hero-grid">
+      <section class="hero luxury-hero">
+        <div class="container hero-shell">
           <div class="hero-copy">
-            <p class="eyebrow">Digital products. Creative education. Portfolio growth.</p>
-            <h1>Templates, coaching, and creative skills for modern creators.</h1>
+            <p class="eyebrow">Luxury creative tools for ambitious people</p>
+            <h1>
+              Build a <span class="text-swap" data-word-group data-words='["brand","portfolio","future","presence"]'>brand</span>
+              that feels premium.
+            </h1>
             <p class="lead">
-              Sell premium CVs, portfolios, posters, cards, and creative assets while teaching design and coding through practical, high-value lessons.
+              Discover elevated CV templates, luxury portfolio systems, poster campaigns, business cards, and coaching that turns creative talent into real growth.
             </p>
 
             <div class="hero-actions">
-              <a class="btn btn-primary" href="#shop">Shop the collection</a>
-              <a class="btn btn-secondary" href="#courses">Explore courses</a>
+              <a class="btn btn-primary" href="shop.html">Shop the collection</a>
+              <a class="btn btn-secondary" href="courses.html">Explore courses</a>
             </div>
 
             <ul class="hero-points" aria-label="Key benefits">
-              <li>Instant digital downloads</li>
-              <li>Beginner-friendly courses</li>
-              <li>Professional portfolio assets</li>
+              <li>Editable digital assets</li>
+              <li>Luxury aesthetic direction</li>
+              <li>Profitable creative foundations</li>
             </ul>
           </div>
 
-          <div class="hero-visual" aria-label="Creative studio preview">
-            <div class="showcase-card showcase-main">
-              <div class="mini-label">Featured bundle</div>
-              <h3>Creative Starter Kit</h3>
-              <p>CV + Portfolio + Social content templates</p>
-              <div class="price-row">
-                <span class="price">$49</span>
-                <span class="badge">New</span>
+          <div class="hero-slider" data-hero-slider aria-label="Featured creative slides">
+            <article class="slide active">
+              <div class="slide-image" style="background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=80');"></div>
+              <div class="slide-overlay">
+                <span class="slide-tag">Portfolio prestige</span>
+                <h3>Creative identities that convert attention into opportunity.</h3>
               </div>
-            </div>
-
-            <div class="showcase-card showcase-small top">
-              <span>12K+</span>
-              <p>Downloads sold</p>
-            </div>
-
-            <div class="showcase-card showcase-small bottom">
-              <span>4.9/5</span>
-              <p>Student rating</p>
+            </article>
+            <article class="slide">
+              <div class="slide-image" style="background-image: url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80');"></div>
+              <div class="slide-overlay">
+                <span class="slide-tag">Luxury layouts</span>
+                <h3>Visual systems built for creators, founders, and designers.</h3>
+              </div>
+            </article>
+            <article class="slide">
+              <div class="slide-image" style="background-image: url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80');"></div>
+              <div class="slide-overlay">
+                <span class="slide-tag">High-converting assets</span>
+                <h3>Sell polished, memorable templates your clients want to keep.</h3>
+              </div>
+            </article>
+            <div class="slider-dots" aria-label="Slider navigation">
+              <button class="dot active" type="button" data-slide-dot="0" aria-label="Slide 1"></button>
+              <button class="dot" type="button" data-slide-dot="1" aria-label="Slide 2"></button>
+              <button class="dot" type="button" data-slide-dot="2" aria-label="Slide 3"></button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="brand-strip">
+        <div class="container brand-row">
+          <span>Pinterest</span>
+          <span>Unsplash</span>
+          <span>Dribbble</span>
+          <span>Behance</span>
+          <span>Canva</span>
         </div>
       </section>
 
       <section class="stats">
         <div class="container stats-grid">
           <div>
-            <strong>15,000+</strong>
+            <strong>15K+</strong>
             <span>Template sales</span>
           </div>
           <div>
@@ -108,7 +131,7 @@
             <span>Course completion</span>
           </div>
           <div>
-            <strong>1,200+</strong>
+            <strong>1.2K+</strong>
             <span>Students guided</span>
           </div>
         </div>
@@ -118,9 +141,8 @@
         <div class="container">
           <div class="section-header">
             <p class="eyebrow">Best sellers</p>
-            <h2>Digital templates built for real careers.</h2>
+            <h2>Luxury templates for creative careers.</h2>
           </div>
-
           <div class="product-grid" id="productGrid"></div>
         </div>
       </section>
@@ -129,29 +151,29 @@
         <div class="container">
           <div class="section-header narrow">
             <p class="eyebrow">Everything you need</p>
-            <h2>One platform for personal brands and portfolio growth.</h2>
+            <h2>One platform for premium branding, portfolios, and digital income.</h2>
           </div>
 
           <div class="category-grid">
             <article class="category-card">
               <div class="icon">CV</div>
               <h3>CV Templates</h3>
-              <p>Modern, ATS-friendly resumes for jobs and freelance clients.</p>
+              <p>Modern ATS-ready CVs designed to win interviews and make you memorable.</p>
             </article>
             <article class="category-card">
               <div class="icon">PF</div>
               <h3>Portfolio Kits</h3>
-              <p>Elegant layouts to showcase your work in design, coding, and branding.</p>
+              <p>Elegant portfolio systems for creators, founders, and digital professionals.</p>
             </article>
             <article class="category-card">
               <div class="icon">PO</div>
               <h3>Posters</h3>
-              <p>Event promotions, campaign graphics, and social poster sets.</p>
+              <p>Campaign-ready visuals for launches, events, and social storytelling.</p>
             </article>
             <article class="category-card">
               <div class="icon">CR</div>
               <h3>Cards</h3>
-              <p>Business cards, thank-you cards, brand kits, and client-facing assets.</p>
+              <p>Business cards and premium brand collateral for a polished first impression.</p>
             </article>
           </div>
         </div>
@@ -161,9 +183,8 @@
         <div class="container">
           <div class="section-header">
             <p class="eyebrow">Learn with me</p>
-            <h2>Creative education for design, coding, and business.</h2>
+            <h2>Creative education designed for real-world results.</h2>
           </div>
-
           <div class="course-grid" id="courseGrid"></div>
         </div>
       </section>
@@ -171,16 +192,15 @@
       <section id="portfolio" class="section showcase">
         <div class="container showcase-layout">
           <div class="showcase-copy">
-            <p class="eyebrow">Why creators choose CRAFTKIT</p>
+            <p class="eyebrow">Crafted for growth</p>
             <h2>From templates to transformation.</h2>
             <p>
-              I help people build better personal brands, sharpen their creative skills, and create polished digital products that attract clients and opportunities.
+              I help people sharpen their creative edge, package their value, and build premium assets that command trust, clients, and opportunities.
             </p>
-
             <ul class="check-list">
-              <li>Practical lessons with clear outcomes</li>
-              <li>Brand-ready assets for businesses and creators</li>
-              <li>Templates that can be edited in Canva, Figma, Word, and PDF workflows</li>
+              <li>Practical lessons with measurable progress</li>
+              <li>Portfolio-ready assets and brand systems</li>
+              <li>Edit in Canva, Figma, Word, and PDF workflows</li>
             </ul>
           </div>
 
@@ -207,20 +227,20 @@
         <div class="container">
           <div class="section-header narrow">
             <p class="eyebrow">Student wins</p>
-            <h2>Trusted by people growing their creative careers.</h2>
+            <h2>Trusted by creators building extraordinary careers.</h2>
           </div>
 
           <div class="testimonial-grid">
             <blockquote>
-              “The portfolio templates helped me land two freelance jobs in one month. The course lessons felt practical and easy to apply.”
+              “The portfolio set helped me win two freelance clients in a month. It felt premium, polished, and highly professional.”
               <footer>— DUKE, brand designer</footer>
             </blockquote>
             <blockquote>
-              “I bought the CV bundle and redesigned my resume in one afternoon. The structure and design were exactly what I needed.”
+              “My resume looked memorable and modern. I landed interviews immediately after upgrading my CV kit.”
               <footer>— Daniel, software developer</footer>
             </blockquote>
             <blockquote>
-              “I learned how to build visual content systems and sell them as services. It completely changed my client workflow.”
+              “I turned creative skill into a client system. The strategy and templates changed my whole business.”
               <footer>— Rita, creative strategist</footer>
             </blockquote>
           </div>
@@ -246,7 +266,7 @@
     <footer id="contact" class="site-footer">
       <div class="container footer-grid">
         <div>
-          <a class="brand footer-brand" href="#top">
+          <a class="brand footer-brand" href="index.html">
             <span class="brand-mark">C</span>
             <span>CRAFTKIT</span>
           </a>
@@ -256,9 +276,9 @@
         <div>
           <h3>Explore</h3>
           <ul>
-            <li><a href="#shop">Templates</a></li>
-            <li><a href="#courses">Courses</a></li>
-            <li><a href="#portfolio">Portfolio</a></li>
+            <li><a href="shop.html">Templates</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="about.html">About</a></li>
           </ul>
         </div>
 
