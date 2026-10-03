@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Access | CRAFTKIT Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .admin-auth-shell { width: min(640px, calc(100% - 2rem)); margin: 3rem auto 5rem; }
+      .admin-auth-panel { padding: clamp(1.25rem, 4vw, 2.5rem); border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: var(--shadow); }
+      .admin-auth-tabs { display: flex; gap: 0.5rem; margin: 1.5rem 0; border-bottom: 1px solid var(--line); }
+      .admin-auth-tabs button { border: 0; border-bottom: 2px solid transparent; padding: 0.75rem 1rem; background: transparent; color: var(--muted); cursor: pointer; }
+      .admin-auth-tabs button[aria-selected="true"] { border-color: var(--gold); color: var(--text); }
+      .admin-auth-form { display: grid; gap: 1rem; }
+      .admin-auth-form[hidden], .admin-auth-message[hidden] { display: none; }
+      .admin-auth-actions[hidden] { display: none; }
+      .admin-auth-form label { display: grid; gap: 0.4rem; color: var(--muted); }
+      .admin-auth-form input { width: 100%; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.03); color: var(--text); }
+      .admin-auth-message { margin-top: 1rem; }
+      .admin-auth-message code { display: block; margin: 0.75rem 0; padding: 0.9rem; overflow-wrap: anywhere; background: rgba(0,0,0,0.22); border: 1px solid var(--line); border-radius: 8px; color: var(--text); }
+      .admin-auth-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 0.8rem; }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="CRAFTKIT Studio home"><span class="brand-mark">C</span><span>CRAFTKIT</span></a>
+        <nav class="main-nav" aria-label="Main navigation"><a href="index.html">Store</a><a href="login.html">Customer login</a></nav>
+      </div>
+    </header>
+
+    <main class="admin-auth-shell">
+      <section class="admin-auth-panel">
+        <p class="eyebrow">Store management</p>
+        <h1>Admin access</h1>
+        <p class="auth-subtitle">Create your account or sign in. New accounts need a one-time administrator role grant in Supabase before accessing management tools.</p>
+
+        <div class="admin-auth-tabs" role="tablist" aria-label="Admin account actions">
+          <button id="showAdminLogin" type="button" role="tab" aria-selected="true" aria-controls="adminLoginForm">Sign in</button>
+          <button id="showAdminRegister" type="button" role="tab" aria-selected="false" aria-controls="adminRegisterForm">Create account</button>
+        </div>
+
+        <form id="adminLoginForm" class="admin-auth-form">
+          <label>Email<input id="adminLoginEmail" type="email" autocomplete="username" required /></label>
+          <label>Password<input id="adminLoginPassword" type="password" autocomplete="current-password" required /></label>
+          <button class="btn btn-primary" type="submit">Sign in as admin</button>
+        </form>
+
+        <form id="adminRegisterForm" class="admin-auth-form" hidden>
+          <label>Name<input id="adminRegisterName" type="text" autocomplete="name" required /></label>
+          <label>Email<input id="adminRegisterEmail" type="email" autocomplete="email" required /></label>
+          <label>Password<input id="adminRegisterPassword" type="password" minlength="6" autocomplete="new-password" required /></label>
+          <button class="btn btn-primary" type="submit">Create admin account</button>
+        </form>
+
+        <div id="adminAuthStatus" class="success-box admin-auth-message" aria-live="polite" hidden></div>
+        <div id="promotionActions" class="admin-auth-actions" hidden>
+          <button id="copyPromotionSql" class="btn btn-secondary" type="button">Copy role SQL</button>
+          <button id="checkAdminRole" class="btn btn-primary" type="button">Check admin access</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
+    <script>
+      const loginForm = document.getElementById("adminLoginForm");
+      const registerForm = document.getElementById("adminRegisterForm");
+      const statusBox = document.getElementById("adminAuthStatus");
+      const promotionActions = document.getElementById("promotionActions");
+      let promotionSql = "";
+
+      function setMessage(message, isError = false, showPromotion = false) {
+        statusBox.textContent = message;
+        statusBox.classList.toggle("error", isError);
+        statusBox.hidden = false;
+        promotionActions.hidden = !showPromotion;
+      }
+
+      function setTab(showRegister) {
+        document.getElementById("showAdminLogin").setAttribute("aria-selected", String(!showRegister));
+        document.getElementById("showAdminRegister").setAttribute("aria-selected", String(showRegister));
+        loginForm.hidden = showRegister;
+        registerForm.hidden = !showRegister;
+        statusBox.hidden = true;
+        promotionActions.hidden = true;
+      }
+
+      async function verifyAdminRole(user) {
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.is_admin) {
+          setMessage("Administrator access confirmed. Opening management dashboard…");
+          window.location.href = "admin.html";
+          return true;
+        }
+
+        const email = String(user.email || "").replace(/'/g, "''");
+        promotionSql = `update public.profiles set is_admin = true where email = '${email}';`;
+        setMessage("Your account is created and signed in, but it does not have the administrator role yet. Run this once in Supabase SQL Editor, then choose Check admin access.", false, true);
+        const sql = document.createElement("code");
+        sql.textContent = promotionSql;
+        statusBox.appendChild(document.createElement("br"));
+        statusBox.appendChild(sql);
+        return false;
+      }
+
+      document.getElementById("showAdminLogin").addEventListener("click", () => setTab(false));
+      document.getElementById("showAdminRegister").addEventListener("click", () => setTab(true));
+
+      registerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        try {
+          const user = await registerCraftkitAccount(
+            document.getElementById("adminRegisterName").value.trim(),
+            document.getElementById("adminRegisterEmail").value.trim(),
+            document.getElementById("adminRegisterPassword").value
+          );
+          registerForm.reset();
+          await verifyAdminRole(user);
+        } catch (error) {
+          setMessage(error.message || "Could not create the account.", true);
+        }
+      });
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        try {
+          const user = await loginCraftkitAccount(
+            document.getElementById("adminLoginEmail").value.trim(),
+            document.getElementById("adminLoginPassword").value
+          );
+          loginForm.reset();
+          await verifyAdminRole(user);
+        } catch (error) {
+          setMessage(error.message || "Could not sign in.", true);
+        }
+      });
+
+      document.getElementById("checkAdminRole").addEventListener("click", async () => {
+        try {
+          const user = await getCraftkitAccount();
+          if (!user) throw new Error("Your session has expired. Sign in again.");
+          await verifyAdminRole(user);
+        } catch (error) {
+          setMessage(error.message || "Could not verify the administrator role.", true, true);
+        }
+      });
+
+      document.getElementById("copyPromotionSql").addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(promotionSql);
+          document.getElementById("copyPromotionSql").textContent = "Copied";
+        } catch {
+          setMessage(`Copy this SQL into Supabase SQL Editor: ${promotionSql}`, false, true);
+        }
+      });
+
+      if (!supabaseClient) setMessage("Supabase is not configured. Check supabase-config.js.", true);
+    </script>
+  </body>
+</html>

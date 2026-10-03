@@ -195,7 +195,7 @@
       }
 
       function showAccessMessage(message, includeLogin = false) {
-        adminAccess.innerHTML = `${escapeHTML(message)}${includeLogin ? ' <a href="login.html">Log in</a>' : ""}`;
+        adminAccess.innerHTML = `${escapeHTML(message)}${includeLogin ? ' <a href="admin-login.html">Admin sign in</a>' : ""}`;
         adminWorkspace.hidden = true;
       }
 
@@ -221,7 +221,7 @@
         }
         if (!profile?.is_admin) {
           adminWorkspace.hidden = true;
-          adminAccess.innerHTML = `This signed-in account (${escapeHTML(user.email)}) is not an administrator. Run <code>update public.profiles set is_admin = true where email = '${escapeHTML(user.email)}';</code> in Supabase SQL Editor, then reload this page.`;
+          adminAccess.innerHTML = `This signed-in account (${escapeHTML(user.email)}) is not an administrator. <a href="admin-login.html">Open admin access</a> for the role setup step.`;
           return false;
         }
 
