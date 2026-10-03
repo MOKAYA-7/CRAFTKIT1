@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register | CRAFTKIT Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="CRAFTKIT home">
+          <span class="brand-mark">C</span>
+          <span>CRAFTKIT</span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="index.html#shop">Shop</a>
+          <a href="index.html#courses">Courses</a>
+          <a href="dashboard.html">Dashboard</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-primary" href="index.html">Back to store</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="auth-shell">
+      <section class="auth-visual">
+        <div class="brand" aria-label="CRAFTKIT Studio home">
+          <span class="brand-mark">C</span>
+          <span>CRAFTKIT</span>
+        </div>
+
+        <div>
+          <p class="eyebrow">Start creating</p>
+          <h2>Get access to premium resources and creative learning.</h2>
+        </div>
+
+        <p>
+          Join creators building stronger portfolios, smarter offerings, and more polished digital products.
+        </p>
+
+        <ul class="auth-feature-list">
+          <li><span class="auth-feature-bullet">✓</span> Save your product library</li>
+          <li><span class="auth-feature-bullet">✓</span> Track every lesson</li>
+          <li><span class="auth-feature-bullet">✓</span> Unlock growth-focused content</li>
+        </ul>
+      </section>
+
+      <section class="auth-panel">
+        <a href="index.html" class="btn btn-ghost" style="margin-bottom: 1rem;">← Back</a>
+        <p class="eyebrow">Create account</p>
+        <h1>Register</h1>
+        <p class="auth-subtitle">Start buying templates, enrolling in courses, and tracking your progress.</p>
+
+        <div class="social-row">
+          <button type="button" class="social-btn">Google</button>
+          <button type="button" class="social-btn">GitHub</button>
+        </div>
+
+        <div class="divider">or</div>
+
+        <form id="registerForm" class="auth-form">
+          <label>
+            Full name
+            <input type="text" id="registerName" placeholder="Your name" required />
+          </label>
+
+          <label>
+            Email
+            <input type="email" id="registerEmail" placeholder="you@example.com" required />
+          </label>
+
+          <label>
+            Password
+            <input type="password" id="registerPassword" placeholder="Create a password" required />
+          </label>
+
+          <button type="submit" class="btn btn-primary">Create account</button>
+          <div id="registerStatus" class="form-status" aria-live="polite"></div>
+        </form>
+
+        <p class="auth-note">Already have an account? <a href="login.html">Log in</a></p>
+      </section>
+    </main>
+
+    <script>
+      const registerForm = document.getElementById("registerForm");
+      const registerStatus = document.getElementById("registerStatus");
+      const nextStep = new URLSearchParams(window.location.search).get("next");
+
+      const homeButton = document.createElement("a");
+      homeButton.href = "index.html";
+      homeButton.className = "back-home-fab";
+      homeButton.textContent = "← Home";
+      document.body.appendChild(homeButton);
+
+      registerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        registerStatus.textContent = "";
+        registerStatus.classList.remove("error");
+
+        const name = document.getElementById("registerName").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value.trim();
+
+        try {
+          const response = await fetch("/api/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, password })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || "Registration failed.");
+          }
+
+          localStorage.setItem("craftkitUserEmail", data.user.email);
+          registerStatus.textContent = "Account created. Redirecting...";
+          window.location.href = nextStep === "checkout" ? "index.html#shop" : "dashboard.html";
+        } catch (error) {
+          registerStatus.textContent = error.message;
+          registerStatus.classList.add("error");
+        }
+      });
+    </script>
+  </body>
+</html>

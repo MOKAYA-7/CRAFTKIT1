@@ -1,0 +1,60 @@
+﻿{
+  "products": [
+    {
+      "tag": "CV",
+      "title": "Executive Resume Kit",
+      "description": "A polished resume package for professionals, recruiters, and career switchers.",
+      "image": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+      "price": 10,
+      "editable": true,
+      "fileName": "executive-resume-kit.pdf"
+    },
+    {
+      "tag": "Portfolio",
+      "title": "Minimal Portfolio Pack",
+      "description": "Elegant portfolio templates for designers, creatives, and developers.",
+      "image": "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80",
+      "price": 11,
+      "editable": true,
+      "fileName": "minimal-portfolio-pack.pdf"
+    },
+    {
+      "tag": "Poster",
+      "title": "Campaign Poster Set",
+      "description": "High-impact promotional posters for launches, events, and campaigns.",
+      "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80",
+      "price": 9,
+      "editable": true,
+      "fileName": "campaign-poster-set.pdf"
+    },
+    {
+      "tag": "Cards",
+      "title": "Brand Card Bundle",
+      "description": "Business cards, contact cards, and social-ready brand assets.",
+      "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80",
+      "price": 11,
+      "editable": true,
+      "fileName": "brand-card-bundle.pdf"
+    }
+  ],
+  "courses": [
+    {
+      "title": "Graphic Design Fundamentals",
+      "level": "Beginner",
+      "lessons": "18 lessons",
+      "price": 49
+    },
+    {
+      "title": "HTML & CSS for Creatives",
+      "level": "Intermediate",
+      "lessons": "22 lessons",
+      "price": 59
+    },
+    {
+      "title": "Portfolio Building That Sells",
+      "level": "Advanced",
+      "lessons": "14 lessons",
+      "price": 69
+    }
+  ]
+}

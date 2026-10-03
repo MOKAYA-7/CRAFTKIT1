@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRAFTKIT Studio | Digital Templates & Creative Courses</title>
+    <meta
+      name="description"
+      content="Buy premium CV templates, portfolios, posters, cards, and creative design coding courses from CRAFTKIT Studio."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="#top" aria-label="CRAFTKIT Studio home">
+          <span class="brand-mark">C</span>
+          <span>CRAFTKIT</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="#shop">Shop</a>
+          <a href="#courses">Courses</a>
+          <a href="#portfolio">Portfolio</a>
+          <a href="#reviews">Reviews</a>
+          <a href="#contact">Contact</a>
+        </nav>
+
+        <div class="nav-actions">
+          <a class="btn btn-ghost" href="login.html">Login</a>
+          <a class="btn btn-secondary" href="register.html">Register</a>
+          <a class="btn btn-secondary" href="admin.html">Admin</a>
+          <button id="cartButton" class="btn btn-primary" type="button">Cart <span id="cartCount">0</span></button>
+        </div>
+
+        <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Digital products. Creative education. Portfolio growth.</p>
+            <h1>Templates, coaching, and creative skills for modern creators.</h1>
+            <p class="lead">
+              Sell premium CVs, portfolios, posters, cards, and creative assets while teaching design and coding through practical, high-value lessons.
+            </p>
+
+            <div class="hero-actions">
+              <a class="btn btn-primary" href="#shop">Shop the collection</a>
+              <a class="btn btn-secondary" href="#courses">Explore courses</a>
+            </div>
+
+            <ul class="hero-points" aria-label="Key benefits">
+              <li>Instant digital downloads</li>
+              <li>Beginner-friendly courses</li>
+              <li>Professional portfolio assets</li>
+            </ul>
+          </div>
+
+          <div class="hero-visual" aria-label="Creative studio preview">
+            <div class="showcase-card showcase-main">
+              <div class="mini-label">Featured bundle</div>
+              <h3>Creative Starter Kit</h3>
+              <p>CV + Portfolio + Social content templates</p>
+              <div class="price-row">
+                <span class="price">$49</span>
+                <span class="badge">New</span>
+              </div>
+            </div>
+
+            <div class="showcase-card showcase-small top">
+              <span>12K+</span>
+              <p>Downloads sold</p>
+            </div>
+
+            <div class="showcase-card showcase-small bottom">
+              <span>4.9/5</span>
+              <p>Student rating</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats">
+        <div class="container stats-grid">
+          <div>
+            <strong>15,000+</strong>
+            <span>Template sales</span>
+          </div>
+          <div>
+            <strong>120+</strong>
+            <span>Creative lessons</span>
+          </div>
+          <div>
+            <strong>85%</strong>
+            <span>Course completion</span>
+          </div>
+          <div>
+            <strong>1,200+</strong>
+            <span>Students guided</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="shop" class="section products">
+        <div class="container">
+          <div class="section-header">
+            <p class="eyebrow">Best sellers</p>
+            <h2>Digital templates built for real careers.</h2>
+          </div>
+
+          <div class="product-grid" id="productGrid"></div>
+        </div>
+      </section>
+
+      <section class="section categories">
+        <div class="container">
+          <div class="section-header narrow">
+            <p class="eyebrow">Everything you need</p>
+            <h2>One platform for personal brands and portfolio growth.</h2>
+          </div>
+
+          <div class="category-grid">
+            <article class="category-card">
+              <div class="icon">CV</div>
+              <h3>CV Templates</h3>
+              <p>Modern, ATS-friendly resumes for jobs and freelance clients.</p>
+            </article>
+            <article class="category-card">
+              <div class="icon">PF</div>
+              <h3>Portfolio Kits</h3>
+              <p>Elegant layouts to showcase your work in design, coding, and branding.</p>
+            </article>
+            <article class="category-card">
+              <div class="icon">PO</div>
+              <h3>Posters</h3>
+              <p>Event promotions, campaign graphics, and social poster sets.</p>
+            </article>
+            <article class="category-card">
+              <div class="icon">CR</div>
+              <h3>Cards</h3>
+              <p>Business cards, thank-you cards, brand kits, and client-facing assets.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="courses" class="section courses">
+        <div class="container">
+          <div class="section-header">
+            <p class="eyebrow">Learn with me</p>
+            <h2>Creative education for design, coding, and business.</h2>
+          </div>
+
+          <div class="course-grid" id="courseGrid"></div>
+        </div>
+      </section>
+
+      <section id="portfolio" class="section showcase">
+        <div class="container showcase-layout">
+          <div class="showcase-copy">
+            <p class="eyebrow">Why creators choose CRAFTKIT</p>
+            <h2>From templates to transformation.</h2>
+            <p>
+              I help people build better personal brands, sharpen their creative skills, and create polished digital products that attract clients and opportunities.
+            </p>
+
+            <ul class="check-list">
+              <li>Practical lessons with clear outcomes</li>
+              <li>Brand-ready assets for businesses and creators</li>
+              <li>Templates that can be edited in Canva, Figma, Word, and PDF workflows</li>
+            </ul>
+          </div>
+
+          <div class="portfolio-mockup">
+            <div class="screen-card">
+              <div class="screen-header">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="screen-body">
+                <div class="bar short"></div>
+                <div class="bar long"></div>
+                <div class="cards-row">
+                  <div class="mini-panel"></div>
+                  <div class="mini-panel"></div>
+                  <div class="mini-panel"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="reviews" class="section testimonials">
+        <div class="container">
+          <div class="section-header narrow">
+            <p class="eyebrow">Student wins</p>
+            <h2>Trusted by people growing their creative careers.</h2>
+          </div>
+
+          <div class="testimonial-grid">
+            <blockquote>
+              “The portfolio templates helped me land two freelance jobs in one month. The course lessons felt practical and easy to apply.”
+              <footer>— DUKE, brand designer</footer>
+            </blockquote>
+            <blockquote>
+              “I bought the CV bundle and redesigned my resume in one afternoon. The structure and design were exactly what I needed.”
+              <footer>— Daniel, software developer</footer>
+            </blockquote>
+            <blockquote>
+              “I learned how to build visual content systems and sell them as services. It completely changed my client workflow.”
+              <footer>— Rita, creative strategist</footer>
+            </blockquote>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <aside id="cartPanel" class="cart-panel hidden" aria-hidden="true">
+      <div class="cart-header">
+        <h3>Your cart</h3>
+        <button id="closeCart" class="close-modal" type="button" aria-label="Close cart">×</button>
+      </div>
+      <ul id="cartItems" class="cart-items"></ul>
+      <div class="cart-footer">
+        <div>
+          <span>Total</span>
+          <strong id="cartTotal">$0</strong>
+        </div>
+        <button id="checkoutCartBtn" class="btn btn-primary" type="button">Checkout</button>
+      </div>
+    </aside>
+
+    <footer id="contact" class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="brand footer-brand" href="#top">
+            <span class="brand-mark">C</span>
+            <span>CRAFTKIT</span>
+          </a>
+          <p>Creative templates, training, and digital products for ambitious people.</p>
+        </div>
+
+        <div>
+          <h3>Explore</h3>
+          <ul>
+            <li><a href="#shop">Templates</a></li>
+            <li><a href="#courses">Courses</a></li>
+            <li><a href="#portfolio">Portfolio</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Connect</h3>
+          <ul>
+            <li><a href="mailto:hello@craftkitstudio.com">Email</a></li>
+            <li><a href="https://instagram.com" target="_blank" rel="noreferrer">Instagram</a></li>
+            <li><a href="https://youtube.com" target="_blank" rel="noreferrer">YouTube</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3>Newsletter</h3>
+          <form class="newsletter" action="#" method="post">
+            <input type="email" placeholder="Your email" aria-label="Email address" />
+            <button type="submit" class="btn btn-primary">Join</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="container footer-bottom">
+        <span>© <span id="year"></span> CRAFTKIT Studio</span>
+        <span>All rights reserved</span>
+      </div>
+    </footer>
+
+    <div class="modal hidden" id="checkoutModal" aria-hidden="true">
+      <div class="modal-backdrop" data-close="checkoutModal"></div>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+        <button class="close-modal" type="button" data-close="checkoutModal" aria-label="Close checkout">×</button>
+        <p class="eyebrow">Secure checkout</p>
+        <h3 id="checkoutTitle">Purchase template</h3>
+        <div id="checkoutSuccess" class="success-box hidden"></div>
+        <form id="checkoutForm" class="checkout-form">
+          <label>
+            Full name
+            <input type="text" name="name" placeholder="Your name" required />
+          </label>
+          <label>
+            Email address
+            <input type="email" name="email" placeholder="you@example.com" required />
+          </label>
+          <label>
+            Payment method
+            <select name="payment" required>
+              <option value="">Select one</option>
+              <option value="Stripe">Stripe</option>
+              <option value="PayPal">PayPal</option>
+              <option value="Bank transfer">Bank transfer</option>
+            </select>
+          </label>
+          <button type="submit" class="btn btn-primary full-width">Complete purchase</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="studentModal" aria-hidden="true">
+      <div class="modal-backdrop" data-close="studentModal"></div>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="studentTitle">
+        <button class="close-modal" type="button" data-close="studentModal" aria-label="Close student access">×</button>
+        <p class="eyebrow">Student portal</p>
+        <h3 id="studentTitle">Course access</h3>
+        <div id="studentSuccess" class="success-box hidden"></div>
+        <form id="studentForm" class="checkout-form">
+          <label>
+            Student email
+            <input type="email" name="studentEmail" placeholder="student@example.com" required />
+          </label>
+          <label>
+            Password
+            <input type="password" name="studentPassword" placeholder="••••••••" required />
+          </label>
+          <button type="submit" class="btn btn-primary full-width">Enter course</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+      const homeButton = document.createElement("a");
+      homeButton.href = "index.html";
+      homeButton.className = "back-home-fab";
+      homeButton.textContent = "← Home";
+      document.body.appendChild(homeButton);
+    </script>
+  </body>
+</html>

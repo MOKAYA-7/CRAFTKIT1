@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRAFTKIT Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body { padding-bottom: 4rem; }
+      .dashboard-shell { max-width: 1100px; margin: 4rem auto 0; padding: 0 1rem; }
+      .dashboard-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1.5rem; }
+      .dashboard-panel {
+        background: rgba(18, 28, 47, 0.76);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 1.5rem;
+      }
+      .dashboard-panel h2, .dashboard-panel h3 { margin-top: 0; }
+      .dashboard-list, .progress-list { list-style: none; padding: 0; margin: 1rem 0 0; display: grid; gap: 0.8rem; }
+      .dashboard-list li, .progress-list li {
+        padding: 0.9rem 1rem; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,0.02);
+      }
+      .dashboard-actions { display: flex; gap: 0.8rem; margin-top: 1rem; flex-wrap: wrap; }
+      .dashboard-login, .register-form { display: grid; gap: 1rem; }
+      .dashboard-login input, .register-form input {
+        width: 100%; padding: 0.9rem 1rem; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,0.03); color: var(--text);
+      }
+      .progress-bar { height: 10px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 0.5rem; }
+      .progress-bar > span { display: block; height: 100%; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: inherit; }
+      @media (max-width: 760px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="CRAFTKIT home">
+          <span class="brand-mark">C</span>
+          <span>CRAFTKIT</span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="index.html#shop">Shop</a>
+          <a href="index.html#courses">Courses</a>
+          <a href="dashboard.html">Dashboard</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-primary" href="index.html">Back to store</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="dashboard-shell">
+      <div class="dashboard-grid">
+        <section class="dashboard-panel">
+          <p class="eyebrow">Student dashboard</p>
+          <h2>Welcome back</h2>
+          <div id="dashboardSummary" class="success-box">Loading your account…</div>
+          <ul id="dashboardList" class="dashboard-list"></ul>
+          <h3 style="margin-top: 1.5rem;">Course progress</h3>
+          <ul id="progressList" class="progress-list"></ul>
+        </section>
+
+        <aside class="dashboard-panel">
+          <p class="eyebrow">Account</p>
+          <h3>Login</h3>
+          <form id="dashboardLogin" class="dashboard-login">
+            <input type="email" id="loginEmail" placeholder="student@example.com" required />
+            <input type="password" id="loginPassword" placeholder="Password" required />
+            <button type="submit" class="btn btn-primary">Access dashboard</button>
+          </form>
+
+          <h3 style="margin-top: 1.5rem;">Create account</h3>
+          <form id="registerForm" class="register-form">
+            <input type="text" id="registerName" placeholder="Your name" required />
+            <input type="email" id="registerEmail" placeholder="you@example.com" required />
+            <input type="password" id="registerPassword" placeholder="Password" required />
+            <button type="submit" class="btn btn-secondary">Register</button>
+          </form>
+
+          <div class="dashboard-actions">
+            <a class="btn btn-secondary" href="index.html#courses">Browse courses</a>
+            <a class="btn btn-ghost" href="index.html#shop">Shop templates</a>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <script>
+      const dashboardLogin = document.getElementById("dashboardLogin");
+      const registerForm = document.getElementById("registerForm");
+      const dashboardSummary = document.getElementById("dashboardSummary");
+      const dashboardList = document.getElementById("dashboardList");
+      const progressList = document.getElementById("progressList");
+
+      function getCurrentUser() {
+        return localStorage.getItem("craftkitUserEmail");
+      }
+
+      async function fetchAccount(email) {
+        const response = await fetch(`/api/account?email=${encodeURIComponent(email)}`);
+        if (!response.ok) return null;
+        return response.json();
+      }
+
+      async function fetchOrders(email) {
+        const response = await fetch(`/api/orders?email=${encodeURIComponent(email)}`);
+        if (!response.ok) return [];
+        return response.json();
+      }
+
+      async function fetchProgress(email) {
+        const response = await fetch(`/api/progress?email=${encodeURIComponent(email)}`);
+        if (!response.ok) return [];
+        return response.json();
+      }
+
+      async function renderDashboard() {
+        const email = getCurrentUser();
+        if (!email) {
+          dashboardSummary.textContent = "No active student session yet. Log in to view your courses and downloads.";
+          dashboardList.innerHTML = "";
+          progressList.innerHTML = "";
+          return;
+        }
+
+        const [account, orders, progress] = await Promise.all([
+          fetchAccount(email),
+          fetchOrders(email),
+          fetchProgress(email)
+        ]);
+
+        dashboardSummary.innerHTML = `
+          <strong>${account?.email || email}</strong><br />
+          ${account?.name ? `Name: <strong>${account.name}</strong><br />` : ""}
+          Purchases: <strong>${orders.length}</strong>
+        `;
+
+        if (!orders.length) {
+          dashboardList.innerHTML = '<li><strong>No purchases yet.</strong><br />Visit the store to buy templates.</li>';
+        } else {
+          dashboardList.innerHTML = orders.slice(0, 4).map((order) => `
+            <li>
+              <strong>${order.items.map((item) => item.title || item.name || "Item").join(", ")}</strong><br />
+              $${order.total} • ${order.paymentMethod}
+            </li>
+          `).join("");
+        }
+
+        if (!progress.length) {
+          progressList.innerHTML = '<li>No course progress yet. Enroll in a course to begin tracking.</li>';
+          return;
+        }
+
+        progressList.innerHTML = progress.map((item) => `
+          <li>
+            <strong>${item.course}</strong>
+            <div class="progress-bar"><span style="width: ${Math.min(item.progressValue, 100)}%"></span></div>
+            <small>${item.progressValue}% complete</small>
+            <div style="margin-top: 0.7rem;">
+              <button type="button" class="btn btn-secondary" data-course="${item.course}" data-progress="${Math.min(100, Number(item.progressValue) + 25)}">Advance lesson</button>
+            </div>
+          </li>
+        `).join("");
+
+        progressList.querySelectorAll("[data-course]").forEach((button) => {
+          button.addEventListener("click", async () => {
+            const response = await fetch("/api/progress", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email, course: button.dataset.course, progressValue: button.dataset.progress })
+            });
+            if (response.ok) renderDashboard();
+          });
+        });
+      }
+
+      dashboardLogin.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+
+        const response = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (!response.ok) {
+          dashboardSummary.textContent = "Login failed. Check your email and password.";
+          return;
+        }
+
+        localStorage.setItem("craftkitUserEmail", email.toLowerCase());
+        renderDashboard();
+        dashboardLogin.reset();
+      });
+
+      registerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const name = document.getElementById("registerName").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value.trim();
+
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password })
+        });
+
+        if (!response.ok) {
+          dashboardSummary.textContent = "Registration failed. Try a different email.";
+          return;
+        }
+
+        localStorage.setItem("craftkitUserEmail", email.toLowerCase());
+        renderDashboard();
+        registerForm.reset();
+      });
+
+      renderDashboard();
+    </script>
+    <script>
+      const homeButton = document.createElement("a");
+      homeButton.href = "index.html";
+      homeButton.className = "back-home-fab";
+      homeButton.textContent = "← Home";
+      document.body.appendChild(homeButton);
+    </script>
+  </body>
+</html>

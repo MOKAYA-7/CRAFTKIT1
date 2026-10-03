@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | CRAFTKIT Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="CRAFTKIT home">
+          <span class="brand-mark">C</span>
+          <span>CRAFTKIT</span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="index.html#shop">Shop</a>
+          <a href="index.html#courses">Courses</a>
+          <a href="dashboard.html">Dashboard</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-primary" href="index.html">Back to store</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="auth-shell">
+      <section class="auth-visual">
+        <div class="brand" aria-label="CRAFTKIT Studio home">
+          <span class="brand-mark">C</span>
+          <span>CRAFTKIT</span>
+        </div>
+
+        <div>
+          <p class="eyebrow">Your creative space</p>
+          <h2>Build momentum with premium templates and lessons.</h2>
+        </div>
+
+        <p>
+          Access your downloads, track course progress, and unlock tools designed to help you grow your portfolio and creative brand.
+        </p>
+
+        <ul class="auth-feature-list">
+          <li><span class="auth-feature-bullet">✓</span> Instant template access</li>
+          <li><span class="auth-feature-bullet">✓</span> Personal course dashboard</li>
+          <li><span class="auth-feature-bullet">✓</span> Real progress tracking</li>
+        </ul>
+      </section>
+
+      <section class="auth-panel">
+        <a href="index.html" class="btn btn-ghost" style="margin-bottom: 1rem;">← Back</a>
+        <p class="eyebrow">Welcome back</p>
+        <h1>Login</h1>
+        <p class="auth-subtitle">Access your purchases, course progress, and downloads.</p>
+
+        <div class="social-row">
+          <button type="button" class="social-btn">Google</button>
+          <button type="button" class="social-btn">GitHub</button>
+        </div>
+
+        <div class="divider">or</div>
+
+        <form id="loginForm" class="auth-form">
+          <label>
+            Email
+            <input type="email" id="loginEmail" placeholder="you@example.com" required />
+          </label>
+
+          <label>
+            Password
+            <input type="password" id="loginPassword" placeholder="••••••••" required />
+          </label>
+
+          <button type="submit" class="btn btn-primary">Login to account</button>
+          <div id="loginStatus" class="form-status" aria-live="polite"></div>
+        </form>
+
+        <p class="auth-note">Need an account? <a href="register.html">Create one here</a></p>
+      </section>
+    </main>
+
+    <script>
+      const loginForm = document.getElementById("loginForm");
+      const loginStatus = document.getElementById("loginStatus");
+      const nextStep = new URLSearchParams(window.location.search).get("next");
+
+      const homeButton = document.createElement("a");
+      homeButton.href = "index.html";
+      homeButton.className = "back-home-fab";
+      homeButton.textContent = "← Home";
+      document.body.appendChild(homeButton);
+
+      loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        loginStatus.textContent = "";
+        loginStatus.classList.remove("error");
+
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+
+        try {
+          const response = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || "Login failed.");
+          }
+
+          localStorage.setItem("craftkitUserEmail", data.user.email);
+          loginStatus.textContent = "Login successful. Redirecting...";
+          window.location.href = nextStep === "checkout" ? "index.html#shop" : "dashboard.html";
+        } catch (error) {
+          loginStatus.textContent = error.message;
+          loginStatus.classList.add("error");
+        }
+      });
+    </script>
+  </body>
+</html>

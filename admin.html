@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRAFTKIT Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .admin-shell {
+        max-width: 1100px;
+        margin: 4rem auto 0;
+        padding: 0 1rem 4rem;
+      }
+      .admin-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+      .admin-panel {
+        background: rgba(18, 28, 47, 0.76);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 1.5rem;
+      }
+      .admin-form {
+        display: grid;
+        gap: 1rem;
+      }
+      .admin-form input,
+      .admin-form textarea,
+      .admin-form select {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.02);
+        color: var(--text);
+      }
+      .admin-form .check-row {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: var(--muted);
+      }
+      .admin-form .check-row input {
+        width: auto;
+      }
+      .admin-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0 0;
+        display: grid;
+        gap: 0.8rem;
+      }
+      .admin-list li {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 0.9rem 1rem;
+        background: rgba(255, 255, 255, 0.02);
+      }
+      @media (max-width: 760px) {
+        .admin-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="index.html" aria-label="CRAFTKIT home">
+          <span class="brand-mark">C</span>
+          <span>CRAFTKIT</span>
+        </a>
+        <nav class="main-nav" aria-label="Main navigation">
+          <a href="index.html#shop">Shop</a>
+          <a href="index.html#courses">Courses</a>
+          <a href="admin.html">Admin</a>
+        </nav>
+        <div class="nav-actions">
+          <a class="btn btn-primary" href="index.html">Back to store</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="admin-shell">
+      <div class="admin-grid">
+        <section class="admin-panel">
+          <p class="eyebrow">Admin panel</p>
+          <h2>Add product</h2>
+          <form id="productForm" class="admin-form">
+            <select id="tagSelect" name="tag" required>
+              <option value="">Select type</option>
+              <option value="CV">CV</option>
+              <option value="Portfolio">Portfolio</option>
+              <option value="Poster">Poster</option>
+              <option value="Cards">Cards</option>
+            </select>
+            <input name="title" type="text" placeholder="Product title" required />
+            <textarea name="description" placeholder="Description" required></textarea>
+            <input name="image" type="url" placeholder="Image URL" required />
+            <input id="productPrice" name="price" type="number" min="1" step="0.01" placeholder="Price" required />
+            <label class="check-row">
+              <input name="editable" type="checkbox" checked />
+              Editable template
+            </label>
+            <input id="productFile" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.svg,.zip,.txt,.html" />
+            <button class="btn btn-primary" type="submit">Save product</button>
+          </form>
+        </section>
+
+        <section class="admin-panel">
+          <p class="eyebrow">Admin panel</p>
+          <h2>Add course</h2>
+          <form id="courseForm" class="admin-form">
+            <input name="title" type="text" placeholder="Course title" required />
+            <select name="level" required>
+              <option value="">Select level</option>
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+            </select>
+            <input name="lessons" type="text" placeholder="18 lessons" required />
+            <input name="price" type="number" min="1" placeholder="Course price" required />
+            <button class="btn btn-primary" type="submit">Save course</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="admin-panel" style="margin-top: 1.5rem;">
+        <p class="eyebrow">Current catalog</p>
+        <h2>Store items</h2>
+        <ul id="catalogList" class="admin-list"></ul>
+      </section>
+    </main>
+
+    <script>
+      const catalogList = document.getElementById("catalogList");
+      const productForm = document.getElementById("productForm");
+      const courseForm = document.getElementById("courseForm");
+      const tagSelect = document.getElementById("tagSelect");
+      const productPrice = document.getElementById("productPrice");
+      const productFile = document.getElementById("productFile");
+      const priceMap = { CV: 10, Portfolio: 11, Poster: 9, Cards: 11 };
+
+      tagSelect.addEventListener("change", () => {
+        const selected = tagSelect.value;
+        productPrice.value = priceMap[selected] || "";
+      });
+
+      async function loadCatalog() {
+        const [productsRes, coursesRes] = await Promise.all([
+          fetch("/api/products"),
+          fetch("/api/courses")
+        ]);
+
+        const products = await productsRes.json();
+        const courses = await coursesRes.json();
+
+        catalogList.innerHTML = [
+          ...products.map((item) => `<li><strong>${item.title}</strong> — ${item.tag} — $${item.price}</li>`),
+          ...courses.map((item) => `<li><strong>${item.title}</strong> — ${item.level} — $${item.price}</li>`)
+        ].join("");
+      }
+
+      productForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = Object.fromEntries(new FormData(productForm).entries());
+        const file = productFile.files && productFile.files[0];
+
+        if (file) {
+          const fileData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+          payload.fileData = fileData;
+          payload.fileName = file.name;
+        }
+
+        payload.price = Number(payload.price || priceMap[payload.tag] || 0);
+        payload.editable = Boolean(payload.editable);
+
+        await fetch("/api/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        productForm.reset();
+        productPrice.value = "";
+        productFile.value = "";
+        loadCatalog();
+      });
+
+      courseForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const payload = Object.fromEntries(new FormData(courseForm).entries());
+        await fetch("/api/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        courseForm.reset();
+        loadCatalog();
+      });
+
+      loadCatalog();
+    </script>
+    <script>
+      const homeButton = document.createElement("a");
+      homeButton.href = "index.html";
+      homeButton.className = "back-home-fab";
+      homeButton.textContent = "← Home";
+      document.body.appendChild(homeButton);
+    </script>
+  </body>
+</html>
