@@ -210,8 +210,22 @@ values
   ('CV', 'Executive Resume Kit', 'A polished resume package for professionals, recruiters, and career switchers.', 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80', 10, true),
   ('Portfolio', 'Minimal Portfolio Pack', 'Elegant portfolio templates for designers, creatives, and developers.', 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80', 11, true),
   ('Poster', 'Campaign Poster Set', 'High-impact promotional posters for launches, events, and campaigns.', 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80', 9, true),
-  ('Cards', 'Brand Card Bundle', 'Business cards, contact cards, and social-ready brand assets.', 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80', 11, true)
+  ('Cards', 'Brand Card Bundle', 'Business cards, contact cards, and social-ready brand assets.', 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80', 11, true),
+  ('CV', 'CV Template 01 · Executive Navy', 'A refined two-column CV with a strong professional profile and clear experience timeline.', 'assets/cv1.png', 10, true),
+  ('CV', 'CV Template 02 · Graduate Teal', 'A fresh graduate layout designed to bring education, internships, and early-career skills forward.', 'assets/cv2.png', 10, true),
+  ('CV', 'CV Template 03 · Modern Monochrome', 'A high-contrast editorial CV with room for a concise profile and detailed work history.', 'assets/cv3.png', 10, true),
+  ('CV', 'CV Template 04 · Gold Accent', 'A bold, structured layout for marketing, management, and client-facing careers.', 'assets/cv4.png', 10, true),
+  ('CV', 'CV Template 05 · Teal Creative', 'A creative CV design with clear sections for education, projects, and visual skills.', 'assets/cv5.png', 10, true),
+  ('CV', 'CV Template 06 · Royal Blue', 'A confident blue layout for technical specialists and experienced professionals.', 'assets/cv6.png', 10, true),
+  ('CV', 'CV Template 07 · Forest Editorial', 'A premium editorial look with balanced profile, education, and career sections.', 'assets/cv7.png', 10, true),
+  ('CV', 'CV Template 08 · Minimal Teal', 'A clean contemporary CV focused on readable content and a strong visual hierarchy.', 'assets/cv8.png', 10, true),
+  ('CV', 'CV Template 09 · Warm Minimal', 'An understated warm-toned design for creative and professional roles.', 'assets/cv9.png', 10, true),
+  ('CV', 'CV Template 10 · Classic Blue', 'A polished classic layout with strong contrast and practical section spacing.', 'assets/cv10.png', 10, true)
 on conflict (title) do nothing;
+
+update public.products
+set is_active = false
+where title = 'Executive Resume Kit';
 
 insert into public.courses (title, level, lessons, price)
 values

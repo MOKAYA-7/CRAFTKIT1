@@ -1,12 +1,93 @@
 const fallbackProducts = [
   {
     tag: "CV",
-    title: "Executive Resume Kit",
-    description: "A polished resume package for professionals, recruiters, and career switchers.",
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+    title: "CV Template 01 · Executive Navy",
+    description: "A refined two-column CV with a strong professional profile and clear experience timeline.",
+    image: "assets/cv1.png",
     price: 10,
     editable: true,
-    fileName: "executive-resume-kit.pdf"
+    fileName: "cv-template-01.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 02 · Graduate Teal",
+    description: "A fresh graduate layout designed to bring education, internships, and early-career skills forward.",
+    image: "assets/cv2.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-02.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 03 · Modern Monochrome",
+    description: "A high-contrast editorial CV with room for a concise profile and detailed work history.",
+    image: "assets/cv3.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-03.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 04 · Gold Accent",
+    description: "A bold, structured layout for marketing, management, and client-facing careers.",
+    image: "assets/cv4.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-04.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 05 · Teal Creative",
+    description: "A creative CV design with clear sections for education, projects, and visual skills.",
+    image: "assets/cv5.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-05.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 06 · Royal Blue",
+    description: "A confident blue layout for technical specialists and experienced professionals.",
+    image: "assets/cv6.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-06.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 07 · Forest Editorial",
+    description: "A premium editorial look with balanced profile, education, and career sections.",
+    image: "assets/cv7.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-07.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 08 · Minimal Teal",
+    description: "A clean contemporary CV focused on readable content and a strong visual hierarchy.",
+    image: "assets/cv8.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-08.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 09 · Warm Minimal",
+    description: "An understated warm-toned design for creative and professional roles.",
+    image: "assets/cv9.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-09.html"
+  },
+  {
+    tag: "CV",
+    title: "CV Template 10 · Classic Blue",
+    description: "A polished classic layout with strong contrast and practical section spacing.",
+    image: "assets/cv10.png",
+    price: 10,
+    editable: true,
+    fileName: "cv-template-10.html"
   },
   {
     tag: "Portfolio",
@@ -83,11 +164,16 @@ async function loadCatalog() {
       if (productResult.error) throw productResult.error;
       if (courseResult.error) throw courseResult.error;
       if (productResult.data?.length) {
-        products = productResult.data.map((product) => ({
+        const remoteProducts = productResult.data
+          .filter((product) => !(product.tag === "CV" && product.title === "Executive Resume Kit"))
+          .map((product) => ({
           ...product,
           fileName: product.file_name,
           fileData: product.file_data
-        }));
+          }));
+        const remoteTitles = new Set(remoteProducts.map((product) => product.title));
+        const localCvProducts = fallbackProducts.filter((product) => product.tag === "CV" && !remoteTitles.has(product.title));
+        products = [...remoteProducts, ...localCvProducts];
       }
       if (courseResult.data?.length) courses = courseResult.data;
     }
@@ -199,15 +285,23 @@ if (yearNode) yearNode.textContent = new Date().getFullYear();
 function renderProducts() {
   if (!productGrid) return;
 
-  productGrid.innerHTML = products
+  const pageTag = document.body.dataset.productTag;
+  const pageLimit = Number(productGrid.dataset.limit || 0);
+  const featuredCv = productGrid.dataset.featuredCv === "true";
+  const visibleProducts = products
+    .filter((product) => featuredCv ? product.tag.toLowerCase() === "cv" : !pageTag || product.tag.toLowerCase() === pageTag.toLowerCase())
+    .slice(0, pageLimit || undefined);
+
+  productGrid.innerHTML = visibleProducts
     .map(
       (product) => `
         <article class="product-card">
-          <div class="product-image" style="background-image: url('${product.image}')"></div>
+          <div class="product-image ${product.tag === "CV" ? "cv-product-image" : ""}" style="background-image: url('${product.image}')"></div>
           <div class="product-body">
             <span class="product-tag">${product.tag}</span>
             <h3>${product.title}</h3>
             <p>${product.description}</p>
+            ${product.tag === "CV" ? `<a class="cv-customize-link" href="cv-editor.html?templateNumber=${Number((product.image.match(/cv(\d+)/i) || [])[1]) || 1}&title=${encodeURIComponent(product.title)}">Customize this CV</a>` : ""}
             <div class="product-meta">
               <span class="price">$${product.price}</span>
               <div class="product-actions">
@@ -327,11 +421,24 @@ function getAIRecommendation(prompt = "") {
   const query = String(prompt || "").toLowerCase();
 
   if (/cv|resume|job|career|linkedin/.test(query)) {
+    if (/edit|editing|improve|rewrite|write|bullet|summary|experience|ats|wording/.test(query)) {
+      let advice = "Keep the layout, but replace every placeholder with your own details. Start bullets with action verbs, focus on outcomes, and keep dates, job titles, and punctuation consistent.";
+      if (/summary|profile|about/.test(query)) advice = "Write a 2–3 sentence profile: your role or target role, strongest relevant skills, and one proof point. Avoid generic claims like 'hard-working'; show evidence instead.";
+      else if (/bullet|experience|achievement/.test(query)) advice = "Use action + task + measurable result: 'Automated weekly reporting, cutting preparation time by 4 hours.' Start with a strong verb, quantify honestly, and keep each bullet to one or two lines.";
+      else if (/ats|keyword/.test(query)) advice = "For ATS readability, use standard section headings, a selectable-text export, and keywords that honestly match the job description. Avoid putting essential contact details inside graphics.";
+      else if (/skill/.test(query)) advice = "Prioritize 6–10 role-relevant skills. Mirror terminology from the target job description where truthful, and remove broad traits that are not backed by examples.";
+      return {
+        title: "CV Editing Coach",
+        kind: "cv-editor",
+        cta: "Open CV editor",
+        message: advice
+      };
+    }
     return {
-      title: "Executive Resume Kit",
-      kind: "template",
-      cta: "Get the resume kit",
-      message: "You need a polished professional CV. I recommend the Executive Resume Kit for clean structure, ATS-friendly formatting, and modern impact."
+      title: "CV Template 01 · Executive Navy",
+      kind: "cv-collection",
+      cta: "Browse CV templates",
+      message: "Choose from ten CV layouts at $10 each. Open the collection to compare designs, then personalize your details in the CV editor."
     };
   }
 
@@ -413,17 +520,17 @@ function injectAIAssistant() {
     </div>
     <div class="ai-chat-body">
       <div class="ai-message ai-message-bot">
-        Hi! I can suggest the best templates or courses based on your goal.
+        Hi! I can suggest templates and courses, and coach you through improving your CV wording and layout.
       </div>
     </div>
     <div class="ai-quick-actions">
-      <button type="button" class="ai-chip" data-prompt="I need a CV for a job">CV</button>
+      <button type="button" class="ai-chip" data-prompt="Help me edit my CV summary">Edit CV</button>
       <button type="button" class="ai-chip" data-prompt="I want a portfolio">Portfolio</button>
       <button type="button" class="ai-chip" data-prompt="I need design lessons">Design</button>
       <button type="button" class="ai-chip" data-prompt="I want to learn coding">Coding</button>
     </div>
     <form id="aiAssistantForm" class="ai-form">
-      <input type="text" id="aiAssistantInput" placeholder="Ask for a template, course, or growth path" aria-label="AI assistant input" />
+      <input type="text" id="aiAssistantInput" placeholder="Ask about CV wording, skills, or templates" aria-label="AI assistant input" />
       <button type="submit" class="btn btn-primary">Ask AI</button>
     </form>
   `;
@@ -477,8 +584,9 @@ function handleAIAssistant(prompt) {
   if (!chatBody) return;
 
   const recommendation = getAIRecommendation(prompt);
+  const safePrompt = String(prompt).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[character]);
   const message = `
-    <div class="ai-message ai-message-user">${prompt}</div>
+    <div class="ai-message ai-message-user">${safePrompt}</div>
     <div class="ai-message ai-message-bot">
       ${recommendation.message}
       <div class="ai-recommendation">
@@ -492,10 +600,18 @@ function handleAIAssistant(prompt) {
   chatBody.insertAdjacentHTML("beforeend", message);
   chatBody.scrollTop = chatBody.scrollHeight;
 
-  const cta = chatBody.querySelector(".ai-cta");
+  const cta = chatBody.querySelectorAll(".ai-cta").at(-1);
   if (cta) {
     cta.addEventListener("click", async () => {
       const title = cta.dataset.title || "";
+      if (cta.dataset.kind === "cv-editor") {
+        window.location.href = "cv-editor.html";
+        return;
+      }
+      if (cta.dataset.kind === "cv-collection") {
+        window.location.href = "cv-templates.html";
+        return;
+      }
       if (cta.dataset.kind === "template") {
         if (!await isUserLoggedIn()) {
           redirectToAuth(title);

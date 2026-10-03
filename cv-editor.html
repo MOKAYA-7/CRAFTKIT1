@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CV Editor | CRAFTKIT Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .cv-editor-shell { width: min(1440px, calc(100% - 2rem)); margin: 2rem auto 4rem; }
+      .cv-editor-header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+      .cv-editor-layout { display: grid; grid-template-columns: minmax(280px, 390px) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
+      .cv-editor-form { display: grid; gap: 0.85rem; max-height: calc(100vh - 150px); overflow: auto; padding: 1.1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+      .cv-editor-form label { display: grid; gap: 0.35rem; color: var(--muted); font-size: 0.9rem; }
+      .cv-editor-form input, .cv-editor-form textarea, .cv-editor-form select { width: 100%; padding: 0.7rem 0.8rem; color: var(--text); border: 1px solid var(--line); border-radius: 8px; background: rgba(0,0,0,0.18); }
+      .cv-editor-form textarea { min-height: 80px; resize: vertical; }
+      .cv-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+      .cv-editor-actions { display: flex; flex-wrap: wrap; gap: 0.55rem; position: sticky; bottom: -1.1rem; padding: 0.75rem 0; background: var(--bg-strong); }
+      .cv-preview-wrap { padding: 1rem; overflow: auto; border: 1px solid var(--line); border-radius: 14px; background: #d9dedc; }
+      .cv-paper { width: min(100%, 794px); min-height: 1123px; margin: 0 auto; padding: 48px; color: #172a38; background: #fff; box-shadow: 0 12px 40px rgba(0,0,0,.2); font: 14px/1.45 "DM Sans", sans-serif; }
+      .cv-paper-header { display: grid; grid-template-columns: 1fr 150px; gap: 20px; align-items: center; padding-bottom: 20px; border-bottom: 5px solid #0c6470; }
+      .cv-paper-header h1 { margin: 0; color: #0c3447; font: 700 34px/1.1 "Playfair Display", serif; overflow-wrap: anywhere; }
+      .cv-paper-header p { margin: 8px 0 0; color: #0c6470; font-weight: 700; }
+      .cv-paper-photo { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; background: #e8eeee; }
+      .cv-contact-line { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 14px 0; border-bottom: 1px solid #d4dfdf; color: #3f5962; font-size: 12px; }
+      .cv-paper-grid { display: grid; grid-template-columns: 0.78fr 1.22fr; gap: 26px; padding-top: 20px; }
+      .cv-paper section { margin-bottom: 19px; break-inside: avoid; }
+      .cv-paper h2 { margin: 0 0 9px; padding-bottom: 5px; color: #0c6470; border-bottom: 1px solid #8aabad; font: 700 16px "Playfair Display", serif; }
+      .cv-paper p { margin: 0 0 8px; white-space: pre-line; }
+      .cv-paper ul { margin: 0; padding-left: 18px; }
+      .cv-paper li { margin: 0 0 5px; }
+      .cv-template-2 .cv-paper-header { border-color: #3d827f; }
+      .cv-template-2 .cv-paper-header h1, .cv-template-2 .cv-paper h2 { color: #356d6b; }
+      .cv-template-3 .cv-paper-header { border-color: #c38d46; }
+      .cv-template-3 .cv-paper-header h1, .cv-template-3 .cv-paper h2 { color: #77512e; }
+      .cv-template-4 .cv-paper-header { border-color: #233d78; }
+      .cv-template-4 .cv-paper-header h1, .cv-template-4 .cv-paper h2 { color: #233d78; }
+      .cv-template-5 .cv-paper-header { border-color: #177d80; }
+      .cv-template-5 .cv-paper-header h1, .cv-template-5 .cv-paper h2 { color: #177d80; }
+      .cv-template-6 .cv-paper-header { border-color: #673f68; }
+      .cv-template-6 .cv-paper-header h1, .cv-template-6 .cv-paper h2 { color: #673f68; }
+      .cv-template-7 .cv-paper-header { border-color: #315847; }
+      .cv-template-7 .cv-paper-header h1, .cv-template-7 .cv-paper h2 { color: #315847; }
+      .cv-template-8 .cv-paper-header { border-color: #3d5158; }
+      .cv-template-8 .cv-paper-header h1, .cv-template-8 .cv-paper h2 { color: #3d5158; }
+      .cv-template-9 .cv-paper-header { border-color: #96715b; }
+      .cv-template-9 .cv-paper-header h1, .cv-template-9 .cv-paper h2 { color: #96715b; }
+      .cv-template-10 .cv-paper-header { border-color: #176a94; }
+      .cv-template-10 .cv-paper-header h1, .cv-template-10 .cv-paper h2 { color: #176a94; }
+      .cv-editor-note { color: var(--muted); font-size: 0.9rem; }
+      @media (max-width: 880px) { .cv-editor-layout { grid-template-columns: 1fr; } .cv-editor-form { max-height: none; } .cv-paper { padding: 30px; } }
+      @media (max-width: 540px) { .cv-paper { min-width: 600px; } .cv-preview-wrap { padding: 0.5rem; } .cv-paper-grid { gap: 16px; } }
+      @media print { body { background: #fff !important; } .site-header, .cv-editor-header, .cv-editor-form, .ai-toggle, .ai-assistant-widget { display: none !important; } .cv-editor-shell { width: 100%; margin: 0; } .cv-editor-layout { display: block; } .cv-preview-wrap { padding: 0; border: 0; background: #fff; overflow: visible; } .cv-paper { width: 100%; min-height: auto; padding: 14mm; box-shadow: none; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    </style>
+  </head>
+  <body>
+    <header class="site-header"><div class="container nav-wrap"><a class="brand" href="index.html"><span class="brand-mark">C</span><span>CRAFTKIT</span></a><nav class="main-nav" aria-label="Main navigation"><a href="cv-templates.html">CV templates</a><a href="shop.html">Shop</a></nav><div class="nav-actions"><a class="btn btn-secondary" href="cv-templates.html">Back to templates</a></div><button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false"><span></span><span></span><span></span></button></div></header>
+    <main class="cv-editor-shell">
+      <div class="cv-editor-header"><div><p class="eyebrow">Personalize your CV</p><h1>CV editor</h1><p class="cv-editor-note">Edit your details below. Download an editable HTML file or print/save as PDF.</p></div><label>Design<select id="cvTemplateSelect"><option value="1">01 · Executive navy</option><option value="2">02 · Graduate teal</option><option value="3">03 · Warm minimal</option><option value="4">04 · Classic blue</option><option value="5">05 · Modern teal</option><option value="6">06 · Editorial plum</option><option value="7">07 · Forest green</option><option value="8">08 · Clean monochrome</option><option value="9">09 · Soft neutral</option><option value="10">10 · Contemporary blue</option></select></label></div>
+      <div class="cv-editor-layout">
+        <form id="cvEditorForm" class="cv-editor-form">
+          <div class="cv-form-grid"><label>Name<input name="name" value="Your Name" /></label><label>Professional title<input name="role" value="Professional Title" /></label></div>
+          <label>Profile photo (optional)<input id="cvPhotoInput" type="file" accept="image/png,image/jpeg,image/webp" /></label>
+          <label>Profile summary<textarea name="summary">Write a concise summary of your strengths, experience, and the role you want.</textarea></label>
+          <div class="cv-form-grid"><label>Email<input name="email" type="email" placeholder="you@example.com" /></label><label>Phone<input name="phone" placeholder="Phone number" /></label></div>
+          <div class="cv-form-grid"><label>Location<input name="location" placeholder="City, Country" /></label><label>Website / LinkedIn<input name="website" placeholder="linkedin.com/in/you" /></label></div>
+          <label>Skills<textarea name="skills">Communication
+Project management
+Problem solving</textarea></label>
+          <label>Work experience<textarea name="experience">Role | Company | 2022–Present
+Describe your impact with clear, measurable results.</textarea></label>
+          <label>Education<textarea name="education">Degree | School | Year
+Relevant focus, honors, or coursework.</textarea></label>
+          <label>Languages<textarea name="languages">English
+Other language</textarea></label>
+          <div class="cv-editor-actions"><button class="btn btn-primary" id="downloadCv" type="button">Download editable HTML</button><button class="btn btn-secondary" id="printCv" type="button">Print / save PDF</button></div>
+        </form>
+        <div class="cv-preview-wrap"><article class="cv-paper cv-template-1" id="cvPreview" aria-label="Live CV preview"></article></div>
+      </div>
+    </main>
+    <script>
+      const form = document.getElementById("cvEditorForm");
+      const preview = document.getElementById("cvPreview");
+      const templateSelect = document.getElementById("cvTemplateSelect");
+      const photoInput = document.getElementById("cvPhotoInput");
+      let profilePhoto = "";
+      const escapeHtml = (value) => String(value || "").replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]);
+      const lines = (value) => String(value || "").split(/\n+/).map((line) => line.trim()).filter(Boolean);
+      function renderCv() {
+        const values = Object.fromEntries(new FormData(form).entries());
+        preview.className = `cv-paper cv-template-${templateSelect.value}`;
+        preview.innerHTML = `
+          <header class="cv-paper-header"><div><h1>${escapeHtml(values.name)}</h1><p>${escapeHtml(values.role)}</p></div>${profilePhoto ? `<img class="cv-paper-photo" src="${profilePhoto}" alt="Profile photo" />` : ""}</header>
+          <div class="cv-contact-line">${[values.email, values.phone, values.location, values.website].filter(Boolean).map(escapeHtml).join("<span>·</span>")}</div>
+          <div class="cv-paper-grid"><div>
+            <section><h2>Skills</h2><ul>${lines(values.skills).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section>
+            <section><h2>Education</h2>${lines(values.education).map((item) => `<p>${escapeHtml(item)}</p>`).join("")}</section>
+            <section><h2>Languages</h2><ul>${lines(values.languages).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></section>
+          </div><div>
+            <section><h2>Professional Profile</h2><p>${escapeHtml(values.summary)}</p></section>
+            <section><h2>Work Experience</h2>${lines(values.experience).map((item) => `<p>${escapeHtml(item)}</p>`).join("")}</section>
+          </div></div>`;
+      }
+      form.addEventListener("input", renderCv);
+      templateSelect.addEventListener("change", renderCv);
+      photoInput.addEventListener("change", () => {
+        const file = photoInput.files?.[0];
+        if (!file) { profilePhoto = ""; renderCv(); return; }
+        const reader = new FileReader();
+        reader.onload = () => { profilePhoto = String(reader.result || ""); renderCv(); };
+        reader.readAsDataURL(file);
+      });
+      const requestedTemplate = Number(new URLSearchParams(location.search).get("templateNumber"));
+      if (requestedTemplate >= 1 && requestedTemplate <= 10) templateSelect.value = String(requestedTemplate);
+      const requestedTitle = new URLSearchParams(location.search).get("title");
+      if (requestedTitle) form.elements.name.value = "Your Name";
+      document.getElementById("printCv").addEventListener("click", () => window.print());
+      document.getElementById("downloadCv").addEventListener("click", () => {
+        const accents = { 1: "#0c6470", 2: "#3d827f", 3: "#77512e", 4: "#233d78", 5: "#177d80", 6: "#673f68", 7: "#315847", 8: "#3d5158", 9: "#96715b", 10: "#176a94" };
+        const accent = accents[templateSelect.value] || accents[1];
+        const documentHtml = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(form.elements.name.value)} - CV</title><style>body{font:14px/1.5 Arial,sans-serif;color:#172a38;margin:0}.cv-paper{max-width:794px;min-height:1123px;margin:auto;padding:48px;box-sizing:border-box}.cv-paper-header{display:grid;grid-template-columns:1fr 130px;gap:20px;align-items:center;padding-bottom:20px;border-bottom:5px solid ${accent}}.cv-paper-header h1{margin:0;font:700 34px Georgia,serif;color:#173247}.cv-paper-header p{color:${accent};font-weight:bold}.cv-paper-photo{width:120px;height:120px;border-radius:50%;object-fit:cover}.cv-contact-line{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid #ccd}.cv-paper-grid{display:grid;grid-template-columns:.78fr 1.22fr;gap:26px;padding-top:20px}.cv-paper h2{font:700 16px Georgia,serif;color:${accent};border-bottom:1px solid ${accent};padding-bottom:5px}.cv-paper li,.cv-paper p{margin-bottom:7px;white-space:pre-line}@media print{.cv-paper{padding:14mm}}</style></head><body>${preview.outerHTML}</body></html>`;
+        const blob = new Blob([documentHtml], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${(form.elements.name.value || "my-cv").trim().replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.html`;
+        link.click();
+        URL.revokeObjectURL(url);
+      });
+      renderCv();
+    </script>
+  </body>
+</html>

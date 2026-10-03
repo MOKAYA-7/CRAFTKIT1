@@ -469,6 +469,26 @@ select {
   background-position: center;
 }
 
+.product-image.cv-product-image {
+  height: 300px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-color: #f1f0eb;
+}
+
+.cv-product-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cv-customize-link {
+  display: inline-flex;
+  margin-top: 0.6rem;
+  color: var(--blue-soft);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 .product-body {
   padding: 1.2rem 1.15rem 1.4rem;
 }
@@ -1296,6 +1316,7 @@ select {
   .showcase-layout,
   .footer-grid,
   .product-grid,
+  .cv-product-grid,
   .category-grid,
   .course-grid,
   .testimonial-grid {
@@ -1303,6 +1324,7 @@ select {
   }
 
   .product-grid,
+  .cv-product-grid,
   .category-grid,
   .course-grid,
   .testimonial-grid {
