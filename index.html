@@ -310,7 +310,7 @@
       <div class="modal-backdrop" data-close="checkoutModal"></div>
       <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
         <button class="close-modal" type="button" data-close="checkoutModal" aria-label="Close checkout">×</button>
-        <p class="eyebrow">Secure checkout</p>
+        <p class="eyebrow">Demo checkout</p>
         <h3 id="checkoutTitle">Purchase template</h3>
         <div id="checkoutSuccess" class="success-box hidden"></div>
         <form id="checkoutForm" class="checkout-form">
@@ -323,12 +323,10 @@
             <input type="email" name="email" placeholder="you@example.com" required />
           </label>
           <label>
-            Payment method
+            Order mode
             <select name="payment" required>
               <option value="">Select one</option>
-              <option value="Stripe">Stripe</option>
-              <option value="PayPal">PayPal</option>
-              <option value="Bank transfer">Bank transfer</option>
+              <option value="demo">Demo checkout (no payment taken)</option>
             </select>
           </label>
           <button type="submit" class="btn btn-primary full-width">Complete purchase</button>
@@ -357,6 +355,9 @@
       </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
     <script src="script.js"></script>
     <script>
       const homeButton = document.createElement("a");

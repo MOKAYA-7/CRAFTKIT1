@@ -88,6 +88,9 @@
       </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
     <script>
       const dashboardLogin = document.getElementById("dashboardLogin");
       const registerForm = document.getElementById("registerForm");
@@ -95,46 +98,39 @@
       const dashboardList = document.getElementById("dashboardList");
       const progressList = document.getElementById("progressList");
 
-      function getCurrentUser() {
-        return localStorage.getItem("craftkitUserEmail");
-      }
-
-      async function fetchAccount(email) {
-        const response = await fetch(`/api/account?email=${encodeURIComponent(email)}`);
-        if (!response.ok) return null;
-        return response.json();
-      }
-
-      async function fetchOrders(email) {
-        const response = await fetch(`/api/orders?email=${encodeURIComponent(email)}`);
-        if (!response.ok) return [];
-        return response.json();
-      }
-
-      async function fetchProgress(email) {
-        const response = await fetch(`/api/progress?email=${encodeURIComponent(email)}`);
-        if (!response.ok) return [];
-        return response.json();
-      }
-
       async function renderDashboard() {
-        const email = getCurrentUser();
-        if (!email) {
+        const client = supabaseClient;
+        if (!client) {
+          dashboardSummary.textContent = "Add your Supabase URL and publishable key to supabase-config.js to use your account.";
+          return;
+        }
+
+        const { data: { user }, error: userError } = await client.auth.getUser();
+        if (userError || !user) {
           dashboardSummary.textContent = "No active student session yet. Log in to view your courses and downloads.";
           dashboardList.innerHTML = "";
           progressList.innerHTML = "";
           return;
         }
 
-        const [account, orders, progress] = await Promise.all([
-          fetchAccount(email),
-          fetchOrders(email),
-          fetchProgress(email)
+        const [profileResult, ordersResult, progressResult] = await Promise.all([
+          client.from("profiles").select("name,email").eq("id", user.id).maybeSingle(),
+          client.from("orders").select("id,items,total,payment_method,status,created_at").eq("user_id", user.id).order("created_at", { ascending: false }),
+          client.from("course_progress").select("course_title,progress_value").eq("user_id", user.id).order("updated_at", { ascending: false })
         ]);
+        const queryError = profileResult.error || ordersResult.error || progressResult.error;
+        if (queryError) {
+          dashboardSummary.textContent = `Could not load your Supabase data: ${queryError.message}`;
+          return;
+        }
+
+        const profile = profileResult.data;
+        const orders = ordersResult.data || [];
+        const progress = progressResult.data || [];
 
         dashboardSummary.innerHTML = `
-          <strong>${account?.email || email}</strong><br />
-          ${account?.name ? `Name: <strong>${account.name}</strong><br />` : ""}
+          <strong>${profile?.email || user.email}</strong><br />
+          ${profile?.name ? `Name: <strong>${profile.name}</strong><br />` : ""}
           Purchases: <strong>${orders.length}</strong>
         `;
 
@@ -144,7 +140,7 @@
           dashboardList.innerHTML = orders.slice(0, 4).map((order) => `
             <li>
               <strong>${order.items.map((item) => item.title || item.name || "Item").join(", ")}</strong><br />
-              $${order.total} • ${order.paymentMethod}
+              $${order.total || 0} • ${order.status || "demo"} order
             </li>
           `).join("");
         }
@@ -156,23 +152,25 @@
 
         progressList.innerHTML = progress.map((item) => `
           <li>
-            <strong>${item.course}</strong>
-            <div class="progress-bar"><span style="width: ${Math.min(item.progressValue, 100)}%"></span></div>
-            <small>${item.progressValue}% complete</small>
+            <strong>${item.course_title}</strong>
+            <div class="progress-bar"><span style="width: ${Math.min(item.progress_value, 100)}%"></span></div>
+            <small>${item.progress_value}% complete</small>
             <div style="margin-top: 0.7rem;">
-              <button type="button" class="btn btn-secondary" data-course="${item.course}" data-progress="${Math.min(100, Number(item.progressValue) + 25)}">Advance lesson</button>
+              <button type="button" class="btn btn-secondary" data-course="${item.course_title}" data-progress="${Math.min(100, Number(item.progress_value) + 25)}">Advance lesson</button>
             </div>
           </li>
         `).join("");
 
         progressList.querySelectorAll("[data-course]").forEach((button) => {
           button.addEventListener("click", async () => {
-            const response = await fetch("/api/progress", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ email, course: button.dataset.course, progressValue: button.dataset.progress })
-            });
-            if (response.ok) renderDashboard();
+            const { error } = await client.from("course_progress").upsert({
+              user_id: user.id,
+              course_title: button.dataset.course,
+              progress_value: Number(button.dataset.progress),
+              updated_at: new Date().toISOString()
+            }, { onConflict: "user_id,course_title" });
+            if (error) dashboardSummary.textContent = `Could not save progress: ${error.message}`;
+            else renderDashboard();
           });
         });
       }
@@ -182,20 +180,14 @@
         const email = document.getElementById("loginEmail").value.trim();
         const password = document.getElementById("loginPassword").value.trim();
 
-        const response = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-
-        if (!response.ok) {
-          dashboardSummary.textContent = "Login failed. Check your email and password.";
-          return;
+        try {
+          const user = await loginCraftkitAccount(email, password);
+          localStorage.setItem("craftkitUserEmail", user.email);
+          await renderDashboard();
+          dashboardLogin.reset();
+        } catch (error) {
+          dashboardSummary.textContent = error.message;
         }
-
-        localStorage.setItem("craftkitUserEmail", email.toLowerCase());
-        renderDashboard();
-        dashboardLogin.reset();
       });
 
       registerForm.addEventListener("submit", async (event) => {
@@ -204,20 +196,14 @@
         const email = document.getElementById("registerEmail").value.trim();
         const password = document.getElementById("registerPassword").value.trim();
 
-        const response = await fetch("/api/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password })
-        });
-
-        if (!response.ok) {
-          dashboardSummary.textContent = "Registration failed. Try a different email.";
-          return;
+        try {
+          const user = await registerCraftkitAccount(name, email, password);
+          localStorage.setItem("craftkitUserEmail", user.email);
+          await renderDashboard();
+          registerForm.reset();
+        } catch (error) {
+          dashboardSummary.textContent = error.message;
         }
-
-        localStorage.setItem("craftkitUserEmail", email.toLowerCase());
-        renderDashboard();
-        registerForm.reset();
       });
 
       renderDashboard();

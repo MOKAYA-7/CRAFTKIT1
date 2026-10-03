@@ -58,13 +58,14 @@ const fallbackCourses = [
   }
 ];
 
-const STORAGE_KEY = "craftkitStudioData";
 const CART_KEY = "craftkitCart";
 let products = [...fallbackProducts];
 let courses = [...fallbackCourses];
 
-function isUserLoggedIn() {
-  return Boolean(localStorage.getItem("craftkitUserEmail"));
+async function isUserLoggedIn() {
+  if (!supabaseClient) return false;
+  const { data, error } = await supabaseClient.auth.getSession();
+  return !error && Boolean(data.session);
 }
 
 function redirectToAuth(productTitle, purchaseType = "product") {
@@ -74,21 +75,24 @@ function redirectToAuth(productTitle, purchaseType = "product") {
 
 async function loadCatalog() {
   try {
-    const [productsRes, coursesRes] = await Promise.all([
-      fetch("/api/products"),
-      fetch("/api/courses")
-    ]);
-
-    if (productsRes.ok) {
-      const catalogProducts = await productsRes.json();
-      if (Array.isArray(catalogProducts) && catalogProducts.length) products = catalogProducts;
-    }
-    if (coursesRes.ok) {
-      const catalogCourses = await coursesRes.json();
-      if (Array.isArray(catalogCourses) && catalogCourses.length) courses = catalogCourses;
+    if (supabaseClient) {
+      const [productResult, courseResult] = await Promise.all([
+        supabaseClient.from("products").select("*").eq("is_active", true).order("created_at"),
+        supabaseClient.from("courses").select("*").eq("is_active", true).order("created_at")
+      ]);
+      if (productResult.error) throw productResult.error;
+      if (courseResult.error) throw courseResult.error;
+      if (productResult.data?.length) {
+        products = productResult.data.map((product) => ({
+          ...product,
+          fileName: product.file_name,
+          fileData: product.file_data
+        }));
+      }
+      if (courseResult.data?.length) courses = courseResult.data;
     }
   } catch (error) {
-    console.warn("Using fallback catalog data.", error);
+    console.warn("Using the built-in catalog because Supabase catalog data could not be loaded.", error);
   }
 
   renderProducts();
@@ -99,30 +103,14 @@ async function loadCatalog() {
   const pendingCheckout = localStorage.getItem("craftkitPendingCheckout");
   if (pendingCheckout) {
     localStorage.removeItem("craftkitPendingCheckout");
+    const hasSession = await isUserLoggedIn();
     if (pendingCheckout === "__cart__") {
       const items = getCart();
-      if (items.length && isUserLoggedIn()) openCartCheckoutFromItems(items);
-    } else if (isUserLoggedIn() && products.some((item) => item.title === pendingCheckout)) {
+      if (items.length && hasSession) openCartCheckoutFromItems(items);
+    } else if (hasSession && products.some((item) => item.title === pendingCheckout)) {
       openCheckout(pendingCheckout);
     }
   }
-}
-
-function getStoreState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (error) {
-      console.error("Failed to parse local store state", error);
-    }
-  }
-
-  return { orders: [], studentSession: null };
-}
-
-function saveStoreState(state) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
 function getCart() {
@@ -175,7 +163,6 @@ function renderCart() {
       renderCart();
     });
   });
-
 }
 
 function addToCart(productTitle) {
@@ -507,10 +494,10 @@ function handleAIAssistant(prompt) {
 
   const cta = chatBody.querySelector(".ai-cta");
   if (cta) {
-    cta.addEventListener("click", () => {
+    cta.addEventListener("click", async () => {
       const title = cta.dataset.title || "";
       if (cta.dataset.kind === "template") {
-        if (!isUserLoggedIn()) {
+        if (!await isUserLoggedIn()) {
           redirectToAuth(title);
           return;
         }
@@ -518,7 +505,7 @@ function handleAIAssistant(prompt) {
       } else if (cta.dataset.kind === "course") {
         openStudentAccess(title);
       } else if (title) {
-        if (!isUserLoggedIn()) {
+        if (!await isUserLoggedIn()) {
           redirectToAuth(title);
           return;
         }
@@ -531,8 +518,8 @@ function handleAIAssistant(prompt) {
 function attachHomeControls() {
   const buyButtons = document.querySelectorAll(".buy-btn");
   buyButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!isUserLoggedIn()) {
+    button.addEventListener("click", async () => {
+      if (!await isUserLoggedIn()) {
         redirectToAuth(button.dataset.product);
         return;
       }
@@ -604,10 +591,10 @@ if (closeCartButton) {
 }
 
 if (checkoutCartButton) {
-  checkoutCartButton.addEventListener("click", () => {
+  checkoutCartButton.addEventListener("click", async () => {
     const items = getCart();
     if (!items.length) return;
-    if (!isUserLoggedIn()) {
+    if (!await isUserLoggedIn()) {
       redirectToAuth("cart", "cart");
       return;
     }
@@ -625,68 +612,36 @@ if (checkoutForm) {
     const formData = new FormData(checkoutForm);
     const name = formData.get("name");
     const email = formData.get("email");
-    const payment = formData.get("payment");
     const items = JSON.parse(checkoutForm.dataset.cartItems || "[]");
     const purchaseItems = items.length ? items : [{ title: activeProduct.title, price: activeProduct.price }];
     const total = purchaseItems.reduce((sum, item) => sum + Number(item.price || 0), 0);
 
-    const payload = {
-      name,
-      email,
-      items: purchaseItems,
-      paymentMethod: payment,
-      amount: total
-    };
-
+    checkoutSuccess.classList.add("hidden");
     try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
+      const client = requireSupabase();
+      const { data: { user }, error: userError } = await client.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error("Please log in before placing an order.");
+
+      const { error } = await client.from("orders").insert({
+        user_id: user.id,
+        name: String(name),
+        email: String(email),
+        items: purchaseItems,
+        total,
+        payment_method: "demo",
+        status: "demo"
       });
+      if (error) throw error;
 
-      if (!response.ok) throw new Error("Checkout failed");
-
-      const state = getStoreState();
-      state.orders.unshift({ ...payload, date: new Date().toISOString() });
-      saveStoreState(state);
       saveCart([]);
       renderCart();
+      checkoutForm.classList.add("hidden");
+      checkoutSuccess.textContent = `Thanks, ${name}. Your demo order was saved to your Supabase account. No payment was taken.`;
+      checkoutSuccess.classList.remove("hidden");
     } catch (error) {
-      console.warn("Checkout API unavailable; using local fallback.", error);
-      const state = getStoreState();
-      state.orders.unshift({ ...payload, date: new Date().toISOString() });
-      saveStoreState(state);
-      saveCart([]);
-      renderCart();
-    }
-
-    checkoutForm.classList.add("hidden");
-    checkoutSuccess.innerHTML = `
-      <strong>Thanks, ${name}!</strong><br />
-      Your purchase is complete.<br />
-      Payment method: <strong>${payment}</strong><br />
-      Receipt sent to <strong>${email}</strong>.<br />
-      <a href="#" id="downloadProduct" style="color: #fff; font-weight: 700; text-decoration: underline;">Download your files</a>
-    `;
-    checkoutSuccess.classList.remove("hidden");
-
-    const downloadProduct = document.getElementById("downloadProduct");
-    if (downloadProduct) {
-      downloadProduct.addEventListener("click", (e) => {
-        e.preventDefault();
-        const purchasedItem = purchaseItems[0] || activeProduct;
-        if (purchasedItem && purchasedItem.fileData) {
-          downloadProductFile(purchasedItem);
-          return;
-        }
-
-        const fileName = purchaseItems.length > 1 ? "craftkit-order.txt" : `${purchaseItems[0].title.toLowerCase().replace(/\s+/g, "-")}.txt`;
-        triggerDownload(
-          fileName,
-          `CRAFTKIT Studio purchase receipt\n\nCustomer: ${name}\nEmail: ${email}\nItems:\n${purchaseItems.map((item) => `- ${item.title} ($${item.price})`).join("\n")}\nTotal: $${total}\nPayment: ${payment}`
-        );
-      });
+      checkoutSuccess.textContent = error.message || "Could not save this order. Check Supabase configuration and policies.";
+      checkoutSuccess.classList.remove("hidden");
     }
   });
 }
@@ -704,20 +659,11 @@ if (studentForm) {
     const payload = { email, password, course: courseTitle };
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (!response.ok) throw new Error("Login failed");
-      const state = getStoreState();
-      state.studentSession = { ...payload, loggedInAt: new Date().toISOString() };
-      saveStoreState(state);
+      await loginCraftkitAccount(email, password);
     } catch (error) {
-      console.warn("Login API unavailable; using local fallback.", error);
-      const state = getStoreState();
-      state.studentSession = { ...payload, loggedInAt: new Date().toISOString() };
-      saveStoreState(state);
+      studentSuccess.textContent = error.message;
+      studentSuccess.classList.remove("hidden");
+      return;
     }
 
     studentForm.classList.add("hidden");

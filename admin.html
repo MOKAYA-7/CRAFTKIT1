@@ -62,6 +62,16 @@
         padding: 0.9rem 1rem;
         background: rgba(255, 255, 255, 0.02);
       }
+      .admin-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.8rem; }
+      .admin-row-copy { min-width: 0; flex: 1 1 240px; }
+      .admin-row-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .admin-row-actions .btn { padding: 0.55rem 0.8rem; }
+      .admin-notice { margin: 1rem 0; }
+      .admin-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; margin: 1rem 0; }
+      .admin-stat { padding: 1rem; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,0.025); }
+      .admin-stat strong { display: block; font-size: 1.4rem; }
+      .admin-stat span { color: var(--muted); font-size: 0.86rem; }
+      @media (max-width: 560px) { .admin-stats { grid-template-columns: 1fr; } }
       @media (max-width: 760px) {
         .admin-grid {
           grid-template-columns: 1fr;
@@ -88,6 +98,13 @@
     </header>
 
     <main class="admin-shell">
+      <section id="adminAccess" class="admin-panel admin-notice" aria-live="polite">Checking your Supabase administrator access…</section>
+      <div id="adminWorkspace" hidden>
+      <div class="admin-stats">
+        <div class="admin-stat"><strong id="userTotal">0</strong><span>Registered users</span></div>
+        <div class="admin-stat"><strong id="orderTotal">0</strong><span>Orders</span></div>
+        <div class="admin-stat"><strong id="revenueTotal">$0</strong><span>Demo order value</span></div>
+      </div>
       <div class="admin-grid">
         <section class="admin-panel">
           <p class="eyebrow">Admin panel</p>
@@ -104,12 +121,14 @@
             <textarea name="description" placeholder="Description" required></textarea>
             <input name="image" type="url" placeholder="Image URL" required />
             <input id="productPrice" name="price" type="number" min="1" step="0.01" placeholder="Price" required />
+            <input id="productId" type="hidden" />
             <label class="check-row">
               <input name="editable" type="checkbox" checked />
               Editable template
             </label>
             <input id="productFile" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.svg,.zip,.txt,.html" />
             <button class="btn btn-primary" type="submit">Save product</button>
+            <button id="cancelProductEdit" class="btn btn-ghost" type="button" hidden>Cancel edit</button>
           </form>
         </section>
 
@@ -126,7 +145,9 @@
             </select>
             <input name="lessons" type="text" placeholder="18 lessons" required />
             <input name="price" type="number" min="1" placeholder="Course price" required />
+            <input id="courseId" type="hidden" />
             <button class="btn btn-primary" type="submit">Save course</button>
+            <button id="cancelCourseEdit" class="btn btn-ghost" type="button" hidden>Cancel edit</button>
           </form>
         </section>
       </div>
@@ -136,82 +157,243 @@
         <h2>Store items</h2>
         <ul id="catalogList" class="admin-list"></ul>
       </section>
+      <section class="admin-panel" style="margin-top: 1.5rem;">
+        <p class="eyebrow">Accounts</p>
+        <h2>Registered users</h2>
+        <ul id="usersList" class="admin-list"></ul>
+      </section>
+      <section class="admin-panel" style="margin-top: 1.5rem;">
+        <p class="eyebrow">Sales activity</p>
+        <h2>Recent orders</h2>
+        <ul id="ordersList" class="admin-list"></ul>
+      </section>
+      </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
     <script>
+      const adminAccess = document.getElementById("adminAccess");
+      const adminWorkspace = document.getElementById("adminWorkspace");
       const catalogList = document.getElementById("catalogList");
+      const usersList = document.getElementById("usersList");
+      const ordersList = document.getElementById("ordersList");
       const productForm = document.getElementById("productForm");
       const courseForm = document.getElementById("courseForm");
-      const tagSelect = document.getElementById("tagSelect");
+      const productId = document.getElementById("productId");
+      const courseId = document.getElementById("courseId");
       const productPrice = document.getElementById("productPrice");
       const productFile = document.getElementById("productFile");
       const priceMap = { CV: 10, Portfolio: 11, Poster: 9, Cards: 11 };
+      let adminUser = null;
 
-      tagSelect.addEventListener("change", () => {
-        const selected = tagSelect.value;
-        productPrice.value = priceMap[selected] || "";
-      });
+      function escapeHTML(value) {
+        return String(value ?? "").replace(/[&<>\"']/g, (character) => ({
+          "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"
+        })[character]);
+      }
 
-      async function loadCatalog() {
-        const [productsRes, coursesRes] = await Promise.all([
-          fetch("/api/products"),
-          fetch("/api/courses")
+      function showAccessMessage(message, includeLogin = false) {
+        adminAccess.innerHTML = `${escapeHTML(message)}${includeLogin ? ' <a href="login.html">Log in</a>' : ""}`;
+        adminWorkspace.hidden = true;
+      }
+
+      async function verifyAdmin() {
+        if (!supabaseClient) {
+          showAccessMessage("Supabase is not configured.");
+          return false;
+        }
+        const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+        if (authError || !user) {
+          showAccessMessage("Sign in with your administrator account to manage this store.", true);
+          return false;
+        }
+
+        const { data: profile, error } = await supabaseClient
+          .from("profiles")
+          .select("id,name,email,is_admin")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (error) {
+          showAccessMessage(`Could not verify administrator access: ${error.message}`);
+          return false;
+        }
+        if (!profile?.is_admin) {
+          adminWorkspace.hidden = true;
+          adminAccess.innerHTML = `This signed-in account (${escapeHTML(user.email)}) is not an administrator. Run <code>update public.profiles set is_admin = true where email = '${escapeHTML(user.email)}';</code> in Supabase SQL Editor, then reload this page.`;
+          return false;
+        }
+
+        adminUser = user;
+        adminAccess.textContent = `Signed in as ${user.email}`;
+        adminWorkspace.hidden = false;
+        return true;
+      }
+
+      async function loadAdminData() {
+        const [productsResult, coursesResult, usersResult, ordersResult] = await Promise.all([
+          supabaseClient.from("products").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+          supabaseClient.from("courses").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+          supabaseClient.from("profiles").select("id,name,email,is_admin,created_at").order("created_at", { ascending: false }),
+          supabaseClient.from("orders").select("id,user_id,name,email,items,total,status,created_at").order("created_at", { ascending: false }).limit(100)
         ]);
+        const queryError = productsResult.error || coursesResult.error || usersResult.error || ordersResult.error;
+        if (queryError) {
+          adminAccess.textContent = `Admin data could not be loaded: ${queryError.message}`;
+          return;
+        }
 
-        const products = await productsRes.json();
-        const courses = await coursesRes.json();
+        const products = productsResult.data || [];
+        const courses = coursesResult.data || [];
+        const users = usersResult.data || [];
+        const orders = ordersResult.data || [];
+        document.getElementById("userTotal").textContent = users.length;
+        document.getElementById("orderTotal").textContent = orders.length;
+        document.getElementById("revenueTotal").textContent = `$${orders.reduce((sum, order) => sum + Number(order.total || 0), 0).toFixed(2)}`;
 
         catalogList.innerHTML = [
-          ...products.map((item) => `<li><strong>${item.title}</strong> — ${item.tag} — $${item.price}</li>`),
-          ...courses.map((item) => `<li><strong>${item.title}</strong> — ${item.level} — $${item.price}</li>`)
-        ].join("");
+          ...products.map((item) => `<li class="admin-row"><div class="admin-row-copy"><strong>${escapeHTML(item.title)}</strong><br />${escapeHTML(item.tag)} · $${Number(item.price).toFixed(2)} · ${item.editable ? "Editable" : "Download"}</div><div class="admin-row-actions"><button class="btn btn-secondary" type="button" data-edit-product="${item.id}">Edit</button><button class="btn btn-ghost" type="button" data-hide-product="${item.id}">Deactivate</button></div></li>`),
+          ...courses.map((item) => `<li class="admin-row"><div class="admin-row-copy"><strong>${escapeHTML(item.title)}</strong><br />${escapeHTML(item.level)} · ${escapeHTML(item.lessons)} · $${Number(item.price).toFixed(2)}</div><div class="admin-row-actions"><button class="btn btn-secondary" type="button" data-edit-course="${item.id}">Edit</button><button class="btn btn-ghost" type="button" data-hide-course="${item.id}">Deactivate</button></div></li>`)
+        ].join("") || "<li>No active products or courses.</li>";
+
+        usersList.innerHTML = users.map((profile) => `<li class="admin-row"><div class="admin-row-copy"><strong>${escapeHTML(profile.name || "Unnamed user")}</strong><br />${escapeHTML(profile.email)} · Joined ${profile.created_at ? new Date(profile.created_at).toLocaleDateString() : "date unavailable"}</div><div class="admin-row-actions"><button class="btn ${profile.is_admin ? "btn-primary" : "btn-secondary"}" type="button" data-toggle-admin="${profile.id}" ${profile.id === adminUser.id ? "disabled" : ""}>${profile.is_admin ? "Admin" : "Make admin"}</button></div></li>`).join("") || "<li>No registered users yet.</li>";
+
+        ordersList.innerHTML = orders.map((order) => `<li class="admin-row"><div class="admin-row-copy"><strong>${escapeHTML(order.name)} · $${Number(order.total || 0).toFixed(2)}</strong><br />${escapeHTML(order.email)} · ${escapeHTML((order.items || []).map((item) => item.title || item.name || "Item").join(", "))}<br /><small>${order.created_at ? new Date(order.created_at).toLocaleString() : ""} · ${escapeHTML(order.status || "demo")}</small></div></li>`).join("") || "<li>No orders yet.</li>";
+
+        attachManagementActions(products, courses);
       }
+
+      function attachManagementActions(products, courses) {
+        catalogList.querySelectorAll("[data-edit-product]").forEach((button) => button.addEventListener("click", () => {
+          const product = products.find((item) => item.id === button.dataset.editProduct);
+          if (!product) return;
+          productForm.elements.tag.value = product.tag;
+          productForm.elements.title.value = product.title;
+          productForm.elements.description.value = product.description;
+          productForm.elements.image.value = product.image;
+          productPrice.value = product.price;
+          productForm.elements.editable.checked = Boolean(product.editable);
+          productId.value = product.id;
+          productForm.querySelector('[type="submit"]').textContent = "Update product";
+          document.getElementById("cancelProductEdit").hidden = false;
+          productForm.scrollIntoView({ behavior: "smooth", block: "center" });
+        }));
+        catalogList.querySelectorAll("[data-edit-course]").forEach((button) => button.addEventListener("click", () => {
+          const course = courses.find((item) => item.id === button.dataset.editCourse);
+          if (!course) return;
+          courseForm.elements.title.value = course.title;
+          courseForm.elements.level.value = course.level;
+          courseForm.elements.lessons.value = course.lessons;
+          courseForm.elements.price.value = course.price;
+          courseId.value = course.id;
+          courseForm.querySelector('[type="submit"]').textContent = "Update course";
+          document.getElementById("cancelCourseEdit").hidden = false;
+          courseForm.scrollIntoView({ behavior: "smooth", block: "center" });
+        }));
+        catalogList.querySelectorAll("[data-hide-product]").forEach((button) => button.addEventListener("click", async () => {
+          if (!confirm("Deactivate this product from the store?")) return;
+          const { error } = await supabaseClient.from("products").update({ is_active: false }).eq("id", button.dataset.hideProduct);
+          if (error) adminAccess.textContent = `Could not deactivate product: ${error.message}`;
+          else loadAdminData();
+        }));
+        catalogList.querySelectorAll("[data-hide-course]").forEach((button) => button.addEventListener("click", async () => {
+          if (!confirm("Deactivate this course from the store?")) return;
+          const { error } = await supabaseClient.from("courses").update({ is_active: false }).eq("id", button.dataset.hideCourse);
+          if (error) adminAccess.textContent = `Could not deactivate course: ${error.message}`;
+          else loadAdminData();
+        }));
+        usersList.querySelectorAll("[data-toggle-admin]").forEach((button) => button.addEventListener("click", async () => {
+          const profile = users.find((item) => item.id === button.dataset.toggleAdmin);
+          if (!profile || !confirm(`${profile.is_admin ? "Remove admin access from" : "Grant admin access to"} ${profile.email}?`)) return;
+          const { error } = await supabaseClient.from("profiles").update({ is_admin: !profile.is_admin }).eq("id", profile.id);
+          if (error) adminAccess.textContent = `Could not update user role: ${error.message}`;
+          else loadAdminData();
+        }));
+      }
+
+      document.getElementById("tagSelect").addEventListener("change", (event) => {
+        productPrice.value = ({ CV: 10, Portfolio: 11, Poster: 9, Cards: 11 })[event.target.value] || "";
+      });
 
       productForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const payload = Object.fromEntries(new FormData(productForm).entries());
-        const file = productFile.files && productFile.files[0];
-
+        const fields = Object.fromEntries(new FormData(productForm).entries());
+        const file = productFile.files?.[0];
+        const payload = {
+          tag: fields.tag,
+          title: fields.title.trim(),
+          description: fields.description.trim(),
+          image: fields.image.trim(),
+          price: Number(fields.price),
+          editable: Boolean(fields.editable)
+        };
         if (file) {
-          const fileData = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-
-          payload.fileData = fileData;
-          payload.fileName = file.name;
+          try {
+            payload.file_name = file.name;
+            payload.file_data = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          } catch {
+            adminAccess.textContent = "Could not read the selected product file.";
+            return;
+          }
         }
 
-        payload.price = Number(payload.price || priceMap[payload.tag] || 0);
-        payload.editable = Boolean(payload.editable);
-
-        await fetch("/api/products", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
+        const editingId = productId.value;
+        const query = editingId
+          ? supabaseClient.from("products").update(payload).eq("id", editingId)
+          : supabaseClient.from("products").insert(payload);
+        const { error } = await query;
+        if (error) {
+          adminAccess.textContent = `Could not save product: ${error.message}`;
+          return;
+        }
         productForm.reset();
-        productPrice.value = "";
+        productId.value = "";
         productFile.value = "";
-        loadCatalog();
+        productForm.querySelector('[type="submit"]').textContent = "Save product";
+        document.getElementById("cancelProductEdit").hidden = true;
+        loadAdminData();
       });
 
       courseForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const payload = Object.fromEntries(new FormData(courseForm).entries());
-        await fetch("/api/courses", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+        const fields = Object.fromEntries(new FormData(courseForm).entries());
+        const payload = { title: fields.title.trim(), level: fields.level, lessons: fields.lessons.trim(), price: Number(fields.price) };
+        const editingId = courseId.value;
+        const query = editingId
+          ? supabaseClient.from("courses").update(payload).eq("id", editingId)
+          : supabaseClient.from("courses").insert(payload);
+        const { error } = await query;
+        if (error) {
+          adminAccess.textContent = `Could not save course: ${error.message}`;
+          return;
+        }
         courseForm.reset();
-        loadCatalog();
+        courseId.value = "";
+        courseForm.querySelector('[type="submit"]').textContent = "Save course";
+        document.getElementById("cancelCourseEdit").hidden = true;
+        loadAdminData();
       });
 
-      loadCatalog();
+      document.getElementById("cancelProductEdit").addEventListener("click", () => {
+        productForm.reset();
+        productId.value = "";
+        productForm.querySelector('[type="submit"]').textContent = "Save product";
+        document.getElementById("cancelProductEdit").hidden = true;
+      });
+      document.getElementById("cancelCourseEdit").addEventListener("click", () => {
+        courseForm.reset();
+        courseId.value = "";
+        courseForm.querySelector('[type="submit"]').textContent = "Save course";
+        document.getElementById("cancelCourseEdit").hidden = true;
+      });
+
+      verifyAdmin().then((allowed) => allowed && loadAdminData());
     </script>
     <script>
       const homeButton = document.createElement("a");

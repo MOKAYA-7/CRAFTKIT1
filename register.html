@@ -54,14 +54,7 @@
         <a href="index.html" class="btn btn-ghost" style="margin-bottom: 1rem;">← Back</a>
         <p class="eyebrow">Create account</p>
         <h1>Register</h1>
-        <p class="auth-subtitle">Start buying templates, enrolling in courses, and tracking your progress.</p>
-
-        <div class="social-row">
-          <button type="button" class="social-btn">Google</button>
-          <button type="button" class="social-btn">GitHub</button>
-        </div>
-
-        <div class="divider">or</div>
+        <p class="auth-subtitle">Create your CRAFTKIT account with your name, email, and password.</p>
 
         <form id="registerForm" class="auth-form">
           <label>
@@ -76,7 +69,7 @@
 
           <label>
             Password
-            <input type="password" id="registerPassword" placeholder="Create a password" required />
+            <input type="password" id="registerPassword" placeholder="At least 6 characters" minlength="6" autocomplete="new-password" required />
           </label>
 
           <button type="submit" class="btn btn-primary">Create account</button>
@@ -87,6 +80,9 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
     <script>
       const registerForm = document.getElementById("registerForm");
       const registerStatus = document.getElementById("registerStatus");
@@ -108,19 +104,8 @@
         const password = document.getElementById("registerPassword").value.trim();
 
         try {
-          const response = await fetch("/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password })
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.message || "Registration failed.");
-          }
-
-          localStorage.setItem("craftkitUserEmail", data.user.email);
+          const user = await registerCraftkitAccount(name, email, password);
+          localStorage.setItem("craftkitUserEmail", user.email);
           registerStatus.textContent = "Account created. Redirecting...";
           window.location.href = nextStep === "checkout" ? "index.html" : "dashboard.html";
         } catch (error) {

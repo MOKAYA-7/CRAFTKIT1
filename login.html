@@ -54,14 +54,7 @@
         <a href="index.html" class="btn btn-ghost" style="margin-bottom: 1rem;">← Back</a>
         <p class="eyebrow">Welcome back</p>
         <h1>Login</h1>
-        <p class="auth-subtitle">Access your purchases, course progress, and downloads.</p>
-
-        <div class="social-row">
-          <button type="button" class="social-btn">Google</button>
-          <button type="button" class="social-btn">GitHub</button>
-        </div>
-
-        <div class="divider">or</div>
+        <p class="auth-subtitle">Sign in to your CRAFTKIT account.</p>
 
         <form id="loginForm" class="auth-form">
           <label>
@@ -82,6 +75,9 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
     <script>
       const loginForm = document.getElementById("loginForm");
       const loginStatus = document.getElementById("loginStatus");
@@ -102,19 +98,8 @@
         const password = document.getElementById("loginPassword").value.trim();
 
         try {
-          const response = await fetch("/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-          });
-
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error(data.message || "Login failed.");
-          }
-
-          localStorage.setItem("craftkitUserEmail", data.user.email);
+          const user = await loginCraftkitAccount(email, password);
+          localStorage.setItem("craftkitUserEmail", user.email);
           loginStatus.textContent = "Login successful. Redirecting...";
           window.location.href = nextStep === "checkout" ? "index.html" : "dashboard.html";
         } catch (error) {
